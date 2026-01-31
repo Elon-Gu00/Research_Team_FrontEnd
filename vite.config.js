@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-01-07 10:50:11
  * @LastEditors: Gyl
- * @LastEditTime: 2026-01-07 11:13:40
+ * @LastEditTime: 2026-01-27 15:48:38
  * @Description:
  */
 import { fileURLToPath, URL } from 'node:url';
@@ -13,6 +13,8 @@ import vueDevTools from 'vite-plugin-vue-devtools';
 import AutoImport from 'unplugin-auto-import/vite';
 import Components from 'unplugin-vue-components/vite';
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
+
+const pathResolve = (dir) => fileURLToPath(new URL(dir, import.meta.url));
 
 const createProxy = (data) => {
   const proxyObj = {};
@@ -31,6 +33,13 @@ const createProxy = (data) => {
 };
 
 export default defineConfig({
+  css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: '@use "@/assets/style/mixin.scss";'
+        },
+      },
+    },
   plugins: [
     vue(),
     vueDevTools(),
@@ -52,7 +61,10 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+        '@': pathResolve('./src'),
+        '@images': pathResolve('./src/assets/images'),
+        '@components': pathResolve('./src/components'),
+        '@views': pathResolve('./src/views'),
     },
   },
   server: {
