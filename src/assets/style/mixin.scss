@@ -1,0 +1,61 @@
+@use './variables.scss' as theme;
+
+@mixin flex($type: space-between, $align: center) {
+  display: flex;
+  justify-content: $type;
+  align-items: $align;
+}
+
+@mixin fontSC($size: theme.$custom-font-size-sm, $color: theme.$custom-text-color) {
+  font-size: $size;
+  color: $color;
+}
+
+@mixin fontSW($size: theme.$custom-font-size-sm, $weight: theme.$custom-font-weight-md) {
+  font-size: $size;
+  font-weight: $weight;
+}
+
+@mixin fontCW($color: theme.$custom-text-color, $Fweight: theme.$custom-font-weight-md) {
+  color: $color;
+  font-weight: $Fweight;
+}
+
+@mixin fontSWC(
+  $size: theme.$custom-font-size-sm,
+  $Fweight: theme.$custom-font-weight-md,
+  $color: theme.$custom-text-color
+) {
+  font-size: $size;
+  font-weight: $Fweight;
+  color: $color;
+}
+
+@mixin centerInline($lineHeight: theme.$custom-line-height-xs) {
+  line-height: $lineHeight;
+  text-align: center;
+}
+
+@mixin wh($width: auto, $height: auto) {
+  width: $width;
+  height: $height;
+}
+
+@mixin textEllipse() {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@mixin lineClamp($lineClamp: 1) {
+  display: -webkit-box;
+  word-break: break-all;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: $lineClamp;
+  white-space: normal;
+}
+
+@mixin bgImg($imgSrc) {
+  background: url($imgSrc) 0 0 / 100% 100% no-repeat;
+}

@@ -1,1 +1,6 @@
-@use './reset.scss' as *
+@use './reset.scss' as *;
+@use './variables.scss' as theme;
+
+#app{
+  font: theme.$custom-font-size-sm theme.$custom-font-family;
+}

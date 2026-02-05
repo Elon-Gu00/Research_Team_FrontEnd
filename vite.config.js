@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-01-07 10:50:11
  * @LastEditors: Gyl
- * @LastEditTime: 2026-01-27 15:48:38
+ * @LastEditTime: 2026-02-04 21:24:36
  * @Description:
  */
 import { fileURLToPath, URL } from 'node:url';
@@ -13,6 +13,8 @@ import vueDevTools from 'vite-plugin-vue-devtools';
 import AutoImport from 'unplugin-auto-import/vite';
 import Components from 'unplugin-vue-components/vite';
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
+import Icons from 'unplugin-icons/vite';
+import IconsResolver from 'unplugin-icons/resolver';
 
 const pathResolve = (dir) => fileURLToPath(new URL(dir, import.meta.url));
 
@@ -34,12 +36,13 @@ const createProxy = (data) => {
 
 export default defineConfig({
   css: {
-      preprocessorOptions: {
-        scss: {
-          additionalData: '@use "@/assets/style/mixin.scss";'
-        },
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@use "@/assets/style/variables.scss" as *;
+            @use "@/assets/style/mixin.scss" as *;`,
       },
     },
+  },
   plugins: [
     vue(),
     vueDevTools(),
@@ -51,20 +54,38 @@ export default defineConfig({
         './src/stores/modules',
         './src/utils/*',
       ],
+      imports: ['vue', 'vue-router', 'pinia'],
       dts: 'auto-imports.d.ts',
-      resolvers: [ElementPlusResolver()],
+      resolvers: [
+        ElementPlusResolver({
+          importStyle: 'sass',
+        }),
+        IconsResolver({
+          prefix: 'Icon',
+        }),
+      ],
     }),
     Components({
       dts: 'components.d.ts',
-      resolvers: [ElementPlusResolver()],
+      resolvers: [
+        ElementPlusResolver({
+          importStyle: 'sass',
+        }),
+        IconsResolver({
+          prefix: 'icon',
+        }),
+      ],
+    }),
+    Icons({
+      autoInstall: true,
     }),
   ],
   resolve: {
     alias: {
-        '@': pathResolve('./src'),
-        '@images': pathResolve('./src/assets/images'),
-        '@components': pathResolve('./src/components'),
-        '@views': pathResolve('./src/views'),
+      '@': pathResolve('./src'),
+      '@images': pathResolve('./src/assets/images'),
+      '@components': pathResolve('./src/components'),
+      '@views': pathResolve('./src/views'),
     },
   },
   server: {
