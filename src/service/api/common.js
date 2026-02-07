@@ -1,8 +1,15 @@
+/**
+ * @Author: Gyl
+ * @Date: 2026-02-05 16:25:04
+ * @LastEditors: Gyl
+ * @LastEditTime: 2026-02-07 15:39:33
+ * @Description:
+ */
 import request from '..';
 
 const URL = {
   Login: 'user/login',
-  Register: '',
+  Register: 'user/add',
 };
 
 export const api_login = (data) =>

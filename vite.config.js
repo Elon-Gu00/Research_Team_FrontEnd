@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-01-07 10:50:11
  * @LastEditors: Gyl
- * @LastEditTime: 2026-02-04 21:24:36
+ * @LastEditTime: 2026-02-05 20:50:48
  * @Description:
  */
 import { fileURLToPath, URL } from 'node:url';
@@ -94,7 +94,7 @@ export default defineConfig({
     proxy: createProxy([
       {
         proxyKey: '/api',
-        target: 'http://localhost:8080/',
+        target: 'http://localhost:8081/api/',
       },
     ]),
   },

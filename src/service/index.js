@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-02-04 19:37:44
  * @LastEditors: Gyl
- * @LastEditTime: 2026-02-05 15:42:20
+ * @LastEditTime: 2026-02-05 20:52:12
  * @Description:
  */
 import axios from 'axios';
@@ -52,6 +52,10 @@ const errorCallback = (code, mes) => {
     default:
       message = mes;
       break;
+  }
+
+  if (message === 'success') {
+    return;
   }
 
   if (message)

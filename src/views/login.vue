@@ -18,12 +18,13 @@
     <div class="login-box">
       <h1>{{ '登录' }}</h1>
       <el-form>
-        <el-input v-model="loginForm.username" placeholder="请输入账号" />
+        <el-input v-model="loginForm.username" placeholder="请输入账号" clearable />
         <el-input
           v-model="loginForm.password"
           placeholder="请输入密码"
           type="password"
           show-password
+          clearable
         />
       </el-form>
 
@@ -38,21 +39,26 @@
       @dialog-handle="handleDialog"
     >
       <template #dialogBody>
-        <el-form :model="registerForm" label-position="top">
-          <el-form-item label="账号">
+        <el-form
+          ref="registerFormRef"
+          :model="registerForm"
+          label-position="top"
+          :rules="registerRules"
+        >
+          <el-form-item label="账号" prop="username">
             <el-input v-model="registerForm.username" />
           </el-form-item>
-          <el-form-item label="密码">
-            <el-input v-model="registerForm.password" />
+          <el-form-item label="密码" prop="password">
+            <el-input v-model="registerForm.password" type="password" show-password />
           </el-form-item>
-          <el-form-item label="确认密码">
-            <el-input v-model="registerForm.confirmPws" />
+          <el-form-item label="确认密码" prop="confirmPws">
+            <el-input v-model="registerForm.confirmPws" type="password" show-password />
           </el-form-item>
-          <el-form-item label="邮箱">
+          <el-form-item label="邮箱" prop="email">
             <el-input v-model="registerForm.email" />
           </el-form-item>
-          <el-form-item label="身份">
-            <el-radio-group v-model="registerForm.type">
+          <el-form-item label="身份" prop="userType">
+            <el-radio-group v-model="registerForm.userType">
               <el-radio value="STUDENT">学生</el-radio>
               <el-radio value="TEACHER">教师</el-radio>
             </el-radio-group>
@@ -64,28 +70,263 @@
 </template>
 
 <script setup name="Login">
+import { omit } from 'lodash-es';
+
+const router = useRouter();
 const userStore = useUserStore();
+const permissionStore = usePermissionStore();
 
 const loginForm = ref({
   username: '',
   password: '',
 });
 
+const registerFormRef = ref(null);
 const registerForm = ref({
   username: '',
   password: '',
   confirmPws: '',
   email: '',
-  type: 'STUDENT',
+  userType: 'STUDENT',
+});
+
+const adminMenu = [
+  {
+    label: 'user',
+    path: '/manageSys/userManagement',
+    name: '用户管理',
+    keepAlive: '0',
+    icon: 'icon-appstore-fill',
+  },
+  {
+    label: 'user',
+    path: '/manageSys/teamManagement',
+    name: '团队管理',
+    keepAlive: '0',
+    icon: 'icon-appstore-fill',
+  },
+  {
+    label: 'user',
+    path: '/manageSys/teamMemberManagement',
+    name: '团队成员管理',
+    keepAlive: '0',
+    icon: 'icon-appstore-fill',
+  },
+  {
+    label: 'user',
+    path: '/manageSys/paperManagement',
+    name: '论文管理',
+    keepAlive: '0',
+    icon: 'icon-appstore-fill',
+  },
+  {
+    label: 'user',
+    path: '/manageSys/noticeManagement',
+    name: '公告管理',
+    keepAlive: '0',
+    icon: 'icon-appstore-fill',
+  },
+  {
+    label: 'user',
+    path: '/manageSys/newsManagement',
+    name: '新闻管理',
+    keepAlive: '0',
+    icon: 'icon-appstore-fill',
+  },
+  {
+    label: 'user',
+    path: '/manageSys/reportManagement',
+    name: '报告管理',
+    keepAlive: '0',
+    icon: 'icon-appstore-fill',
+  },
+];
+const studentMenu = [
+  {
+    label: '',
+    path: '/user/team',
+    name: '团队',
+    keepAlive: '0',
+    icon: 'icon-team',
+  },
+  {
+    label: '',
+    path: '/user/mine',
+    name: '个人中心',
+    keepAlive: '0',
+    icon: 'icon-user',
+  },
+];
+const teacherMenu = [
+  {
+    label: '',
+    path: '/user/team',
+    name: '我的团队',
+    keepAlive: '0',
+    icon: 'icon-team',
+  },
+  {
+    label: '',
+    path: '/user/paper',
+    name: '论文',
+    keepAlive: '0',
+    icon: 'icon-file',
+  },
+  {
+    label: '',
+    path: '/user/notice',
+    name: '发布公告',
+    keepAlive: '0',
+    icon: 'icon-calendar-check',
+  },
+  {
+    label: '',
+    path: '/user/mine',
+    name: '教师主页',
+    keepAlive: '0',
+    icon: 'icon-idcard',
+  },
+];
+const registerRules = ref({
+  username: [
+    {
+      required: true,
+      message: '请输入账号',
+      trigger: 'blur',
+    },
+    {
+      min: 4,
+      max: 20,
+      message: '账号长度应在 4-20 位之间',
+      trigger: 'blur',
+    },
+  ],
+  password: [
+    {
+      required: true,
+      validator: (rule, value, callback) => {
+        if (!value) {
+          callback(new Error('请输入密码'));
+          return;
+        } else if (!validatePassword(value)) {
+          callback(new Error('密码需 8-16 位，且包含数字、大小写字母、特殊字符[~!@#$%^&*_]'));
+          return;
+        } else {
+          callback();
+          return;
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+
+  // 确认密码
+  confirmPws: [
+    {
+      required: true,
+      validator: (rule, value, callback) => {
+        if (!value) {
+          callback(new Error('请再次输入密码'));
+          return;
+        } else if (value !== registerForm.value.password) {
+          callback(new Error('两次输入的密码不一致'));
+          return;
+        } else {
+          callback();
+          return;
+        }
+      },
+      trigger: ['blur'],
+    },
+  ],
+
+  // 邮箱
+  email: [
+    {
+      required: true,
+      validator: (rule, value, callback) => {
+        if (!value) {
+          callback(new Error('请输入邮箱'));
+          return;
+        } else if (!validateEmailStrict(value)) {
+          callback(new Error('邮箱格式不正确'));
+          return;
+        } else {
+          callback();
+          return;
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+
+  userType: [
+    {
+      required: true,
+      message: '请选择用户类型',
+      trigger: 'change',
+    },
+  ],
 });
 
 const showRegistDialog = ref(false);
 
+watch(showRegistDialog, (val) => {
+  !val && registerFormRef.value.resetFields();
+});
+
 const handleDialog = (type) => {
-  if (type !== 'confirm') showRegistDialog.value = false;
+  if (type !== 'confirm') {
+    showRegistDialog.value = false;
+    return;
+  }
+
+  registerFormRef.value?.validate((valid) => {
+    if (!valid) return;
+    api_addUser({
+      ...omit(registerForm.value, ['username', 'confirmPws']),
+      userName: registerForm.value.username,
+    })
+      .then(() => {
+        ElMessage.success('注册成功');
+        loginForm.value.username = registerForm.value.username;
+        loginForm.value.password = registerForm.value.password;
+        showRegistDialog.value = false;
+      })
+      .catch(() => {});
+  });
 };
 
-const handleLogin = () => {};
+const handleLogin = () => {
+  if (loginForm.value.username === '' || loginForm.value.password === '') {
+    ElMessage.error('请输入账号密码');
+    return;
+  }
+
+  api_login({
+    ...loginForm.value,
+  })
+    .then(({ data }) => {
+      userStore.saveLoginData({ token: data.token, username: data.username });
+      userStore.saveUserInfo({ ...omit(data, ['token', 'username']) });
+
+      switch (data.userType) {
+        case 'ADMIN':
+          permissionStore.saveMenu(adminMenu);
+          break;
+        case 'STUDENT':
+          permissionStore.saveMenu(studentMenu);
+          break;
+        case 'TEACHER':
+          permissionStore.saveMenu(teacherMenu);
+      }
+
+      router.push({ name: 'Index' });
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
 </script>
 
 <style lang="scss" scoped>
