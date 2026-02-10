@@ -4,7 +4,9 @@
 * @Description:
 -->
 <template>
-  <div class="">发送报告</div>
+  <div class="send-report-container">
+    <CustomHeader header-text="发送报告"></CustomHeader>
+  </div>
 </template>
 
 <script setup name="Send"></script>

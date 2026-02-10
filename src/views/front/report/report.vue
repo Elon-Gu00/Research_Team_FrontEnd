@@ -4,7 +4,9 @@
 * @Description:
 -->
 <template>
-  <div class="">报告列表</div>
+  <div class="reprt-list">
+    <CustomHeader header-text="我的报告" :show-back-btn="false"></CustomHeader>
+  </div>
 </template>
 
 <script setup name="Report"></script>

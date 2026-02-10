@@ -26,6 +26,8 @@ export const useUserStore = defineStore(
 
     const getToken = computed(() => loginData.value.token);
 
+    const isTeacher = computed(() => userInfo.value.userType === 'TEACHER');
+
     const saveLoginData = (data) => {
       isLogin.value = true;
       loginData.value = JSON.parse(JSON.stringify(data));
@@ -40,6 +42,7 @@ export const useUserStore = defineStore(
       loginData,
       userInfo,
       getToken,
+      isTeacher,
       saveLoginData,
       saveUserInfo,
     };

@@ -4,7 +4,9 @@
 * @Description:
 -->
 <template>
-  <div class="">教师发布公告</div>
+  <div class="notice">
+    <CustomHeader header-text="发布公告" :show-back-btn="false"></CustomHeader>
+  </div>
 </template>
 
 <script setup name="Notice"></script>

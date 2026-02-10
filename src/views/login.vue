@@ -46,16 +46,16 @@
           :rules="registerRules"
         >
           <el-form-item label="账号" prop="username">
-            <el-input v-model="registerForm.username" />
+            <el-input v-model="registerForm.username" clearable />
           </el-form-item>
           <el-form-item label="密码" prop="password">
-            <el-input v-model="registerForm.password" type="password" show-password />
+            <el-input v-model="registerForm.password" type="password" show-password clearable />
           </el-form-item>
           <el-form-item label="确认密码" prop="confirmPws">
-            <el-input v-model="registerForm.confirmPws" type="password" show-password />
+            <el-input v-model="registerForm.confirmPws" type="password" show-password clearable />
           </el-form-item>
           <el-form-item label="邮箱" prop="email">
-            <el-input v-model="registerForm.email" />
+            <el-input v-model="registerForm.email" clearable />
           </el-form-item>
           <el-form-item label="身份" prop="userType">
             <el-radio-group v-model="registerForm.userType">
@@ -148,6 +148,20 @@ const studentMenu = [
     name: '团队',
     keepAlive: '0',
     icon: 'icon-team',
+  },
+  {
+    label: '',
+    path: '/user/paper',
+    name: '论文',
+    keepAlive: '0',
+    icon: 'icon-file',
+  },
+  {
+    label: '',
+    path: '/user/report',
+    name: '报告',
+    keepAlive: '0',
+    icon: 'icon-Report',
   },
   {
     label: '',
@@ -379,7 +393,6 @@ const handleLogin = () => {
     border-radius: 32px;
     box-shadow: 0 0 100px 1px #c5c5c5;
     padding: 36px;
-
     > h1 {
       @include fontSWC(40px, 700, #333);
       margin-bottom: 24px;

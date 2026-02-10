@@ -26,6 +26,7 @@
       </el-input>
     </div>
     <div class="user-info">
+      <el-button type="primary" v-if="isTeacher">发布新闻</el-button>
       <img src="../../assets/images/avatar-default.png" alt="" :draggable="false" />
       <el-dropdown trigger="hover" class="el-dropdown">
         <div class="dropdown-text">
@@ -46,7 +47,7 @@
 import router from '@/router';
 
 const userStore = useUserStore();
-const { userInfo, loginData } = storeToRefs(userStore);
+const { userInfo, loginData, isTeacher } = storeToRefs(userStore);
 
 const searchInput = ref('');
 const searchType = ref('1');
@@ -88,7 +89,7 @@ const logout = () => {
 
     img {
       @include wh(32px, 32px);
-      margin-right: 16px;
+      margin: 0 16px;
     }
 
     .dropdown-text {

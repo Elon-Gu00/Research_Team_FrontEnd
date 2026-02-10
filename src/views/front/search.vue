@@ -4,7 +4,9 @@
 * @Description: 搜索页
 -->
 <template>
-  <div class="">搜索页结果</div>
+  <div class="search-container">
+    <CustomHeader header-text="搜索"></CustomHeader>
+  </div>
 </template>
 
 <script setup name="Search"></script>
