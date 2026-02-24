@@ -44,6 +44,7 @@ const handleBack = () => {
 
 <style lang="scss" scoped>
 .header {
+  width: 100%;
   @include fontSWC(36px, 600, #606266);
   > .title {
     @include flex(flex-start, center);

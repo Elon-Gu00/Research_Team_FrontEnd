@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-02-04 19:37:44
  * @LastEditors: Gyl
- * @LastEditTime: 2026-02-05 20:52:12
+ * @LastEditTime: 2026-02-10 21:45:00
  * @Description:
  */
 import axios from 'axios';
@@ -19,6 +19,7 @@ const abortRequest = new AbortRequest();
 Nprogress.configure({
   easing: 'ease',
   speed: 600,
+  showSpinner: false,
 });
 
 const instance = axios.create({

@@ -415,7 +415,7 @@ const uploadSuccess = (res, uploadFile, uploadFiles) => {
   props.showLoading && (uploadLoading.value = false);
 
   if (res.code === 0 && res.data) {
-    ElMessage.success(t('message.actionSuccess'));
+    ElMessage.success('上传成功');
 
     let resData = res.data;
     console.log('resData', resData);

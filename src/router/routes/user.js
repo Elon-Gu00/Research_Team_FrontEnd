@@ -1,3 +1,10 @@
+/**
+ * @Author: Gyl
+ * @Date: 2026-02-06 15:27:21
+ * @LastEditors: Gyl
+ * @LastEditTime: 2026-02-22 11:53:44
+ * @Description:
+ */
 const userRoutes = [
   {
     path: '/user',
@@ -17,6 +24,9 @@ const userRoutes = [
       {
         path: 'send',
         name: 'Send',
+        meta: {
+          activeMenu: '/user/report',
+        },
         component: () => import(`@views/front/report/send.vue`),
       },
       {
@@ -27,6 +37,9 @@ const userRoutes = [
       {
         path: 'teamDetail',
         name: 'TeamDetail',
+        meta: {
+          activeMenu: '/user/team',
+        },
         component: () => import(`@views/front/team/teamDetail.vue`),
       },
       {

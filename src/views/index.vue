@@ -4,7 +4,9 @@
 * @Description: 首页
 -->
 <template>
-  <div class="">首页</div>
+  <div class="index-page">
+    <CustomHeader header-text="首页" :show-back-btn="false"></CustomHeader>
+  </div>
 </template>
 
 <script setup name="Index"></script>

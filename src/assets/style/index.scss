@@ -4,3 +4,8 @@
 #app{
   font: theme.$custom-font-size-sm theme.$custom-font-family;
 }
+
+#nprogress .bar {
+  background: theme.$custom-color-success !important;
+}
+

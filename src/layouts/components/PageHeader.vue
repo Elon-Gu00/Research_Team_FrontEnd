@@ -7,13 +7,13 @@
   <div class="page-header">
     <div class="search-box">
       <span>站内搜索</span>
-      <el-input v-model="searchInput" placeholder="请输入">
+      <el-input v-model="searchInput" placeholder="请输入" @keydown.enter="handleSearch" clearable>
         <template #prepend>
           <el-select v-model="searchType" placeholder="Select">
-            <el-option label="团队" value="1" />
-            <el-option label="论文" value="2" />
-            <el-option label="新闻" value="3" />
-            <el-option label="教师" value="4" />
+            <el-option label="团队" value="TEAM" />
+            <el-option label="论文" value="PAPAER" />
+            <el-option label="新闻" value="NEWS" />
+            <el-option label="教师" value="TEACHER" />
           </el-select>
         </template>
         <template #append>
@@ -26,7 +26,7 @@
       </el-input>
     </div>
     <div class="user-info">
-      <el-button type="primary" v-if="isTeacher">发布新闻</el-button>
+      <el-button type="success" v-if="isTeacher">发布新闻</el-button>
       <img src="../../assets/images/avatar-default.png" alt="" :draggable="false" />
       <el-dropdown trigger="hover" class="el-dropdown">
         <div class="dropdown-text">
@@ -45,12 +45,17 @@
 
 <script setup name="PageHeader">
 import router from '@/router';
+import { debounce } from 'lodash-es';
 
 const userStore = useUserStore();
 const { userInfo, loginData, isTeacher } = storeToRefs(userStore);
 
 const searchInput = ref('');
-const searchType = ref('1');
+const searchType = ref('TEAM');
+
+const handleSearch = debounce(() => {
+  router.push({ name: 'Search', query: { type: searchType.value, keyword: searchInput.value } });
+}, 500);
 
 const logout = () => {
   userStore.$reset();
