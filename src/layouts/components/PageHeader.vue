@@ -11,7 +11,7 @@
         <template #prepend>
           <el-select v-model="searchType" placeholder="Select">
             <el-option label="团队" value="TEAM" />
-            <el-option label="论文" value="PAPAER" />
+            <el-option label="论文" value="PAPER" />
             <el-option label="新闻" value="NEWS" />
             <el-option label="教师" value="TEACHER" />
           </el-select>
@@ -26,7 +26,9 @@
       </el-input>
     </div>
     <div class="user-info">
-      <el-button type="success" v-if="isTeacher">发布新闻</el-button>
+      <el-button type="success" v-if="isTeacher || isAdmin" @click="showDialog = true"
+        >发布新闻</el-button
+      >
       <img src="../../assets/images/avatar-default.png" alt="" :draggable="false" />
       <el-dropdown trigger="hover" class="el-dropdown">
         <div class="dropdown-text">
@@ -40,6 +42,42 @@
         </template>
       </el-dropdown>
     </div>
+    <custom-dialog
+      :is-show="showDialog"
+      width="40%"
+      title="发布新闻"
+      confirm-btn-text="发布"
+      cancel-btn-text="取消"
+      @dialog-handle="handleDialog"
+    >
+      <template #dialogBody>
+        <el-form ref="operationFormRef" :model="operationFormData" label-position="top">
+          <el-form-item label="新闻标题" prop="title">
+            <el-input v-model="operationFormData.title" />
+          </el-form-item>
+          <el-form-item label="新闻摘要" prop="summary">
+            <el-input v-model="operationFormData.summary" />
+          </el-form-item>
+          <el-form-item label="内容" prop="content">
+            <!-- <WEditor :editorHeight="350" @create-editor="handleCreateEditor" /> -->
+            <el-input v-model="operationFormData.content" type="textarea" />
+          </el-form-item>
+          <el-form-item label="封面图" prop="covrUrl">
+            <upload-file
+              :upload-headers="uploadHeaders"
+              :upload-path="uploadPath"
+              list-type="picture-card"
+              v-model:file-list="operationFormData.cover"
+              upload-tip="支持上传JPG，PNG格式的文件"
+              accept-list=".jpg,.png"
+              :size-limit="20"
+              :hide-upload-btn="operationFormData.cover.length >= 1"
+              @upload-success="handleUploadSuccess"
+            />
+          </el-form-item>
+        </el-form>
+      </template>
+    </custom-dialog>
   </div>
 </template>
 
@@ -48,10 +86,36 @@ import router from '@/router';
 import { debounce } from 'lodash-es';
 
 const userStore = useUserStore();
-const { userInfo, loginData, isTeacher } = storeToRefs(userStore);
+const { userInfo, loginData, isTeacher, isAdmin } = storeToRefs(userStore);
+const { uploadHeaders, uploadPath } = useUploadHeaders('files/upload');
 
 const searchInput = ref('');
 const searchType = ref('TEAM');
+
+const operationFormRef = ref(null);
+const showDialog = ref(false);
+const operationFormData = ref({
+  cover: [],
+});
+const editorInstance = ref(null);
+
+watch(showDialog, (val) => {
+  !val && operationFormRef.value.resetFields();
+});
+
+const handleDialog = (type) => {
+  if (type !== 'confirm') showDialog.value = false;
+};
+
+const handleCreateEditor = (editor) => {
+  if (editor !== null) editorInstance.value = editor;
+};
+
+const handleUploadSuccess = ({ result, uploadFile }) => {
+  operationFormData.value.cover = [
+    { url: result.previewUrl, name: uploadFile.name, coverUrl: result.fileUrl },
+  ];
+};
 
 const handleSearch = debounce(() => {
   router.push({ name: 'Search', query: { type: searchType.value, keyword: searchInput.value } });

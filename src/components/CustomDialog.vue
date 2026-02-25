@@ -2,8 +2,8 @@
  * @Author: Gyl
  * @Date: 2026-02-05 14:54:52
  * @LastEditors: Gyl
- * @LastEditTime: 2026-02-05 15:21:40
- * @Description: 
+ * @LastEditTime: 2026-02-24 14:58:10
+ * @Description:
 -->
 <template>
   <div>
@@ -231,7 +231,7 @@ const beforeClose = () => {
 
       > .dialog-body-con {
         max-height: calc(100vh - 200px);
-        // overflow-y: auto;
+        overflow-y: auto;
       }
     }
   }

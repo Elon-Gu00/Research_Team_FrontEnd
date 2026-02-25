@@ -15,17 +15,46 @@
           <el-dropdown placement="top">
             <span> <icon-ep-more-filled /></span>
             <template #dropdown>
-              <el-dropdown-item>删除团队</el-dropdown-item>
+              <el-dropdown-item v-if="isTeacher">删除团队</el-dropdown-item>
+              <el-dropdown-item v-else>退出团队</el-dropdown-item>
             </template>
           </el-dropdown>
         </div>
       </div>
     </div>
     <div class="create-team" v-if="userInfo.userType === 'TEACHER'">
-      <div class="create-btn">
+      <div class="create-btn" @click="showDialog = true">
         <div><icon-ep-plus />创建一个新的团队</div>
       </div>
     </div>
+    <custom-dialog
+      title="创建一个团队"
+      width="30%"
+      confirm-btn-text="创建"
+      cancel-btn-text="取消"
+      :is-show="showDialog"
+      @dialog-handle="handleDialog"
+    >
+      <template #dialogBody>
+        <el-form
+          ref="operationFormRef"
+          :model="operationFormData"
+          label-suffix=":"
+          label-position="top"
+        >
+          <el-form-item
+            label="团队名称"
+            prop="teamName"
+            :rules="{ required: true, message: '请输入团队名称', trigger: 'blur' }"
+          >
+            <el-input v-model="operationFormData.teamName" />
+          </el-form-item>
+          <el-form-item label="团队介绍" prop="description">
+            <el-input v-model="operationFormData.description" type="textarea" />
+          </el-form-item>
+        </el-form>
+      </template>
+    </custom-dialog>
   </div>
 </template>
 
@@ -34,7 +63,7 @@ import CustomHeader from '@/components/CustomHeader.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
-const { userInfo } = storeToRefs(userStore);
+const { userInfo, isTeacher } = storeToRefs(userStore);
 
 const teamList = ref([
   {
@@ -53,6 +82,18 @@ const teamList = ref([
     teamName: 'cehsi样式',
   },
 ]);
+
+const showDialog = ref(false);
+const operationFormData = ref({});
+const operationFormRef = ref(null);
+
+watch(showDialog, (val) => {
+  !val && operationFormRef.value.resetFields();
+});
+
+const handleDialog = (type) => {
+  if (type !== 'confirm') showDialog.value = false;
+};
 
 const handleToDetail = () => {
   router.push({ name: 'TeamDetail' });
@@ -109,9 +150,11 @@ const handleToDetail = () => {
       border-radius: 16px;
       border: 1px #dcdfe6 solid;
       transition: all 0.3s;
+      cursor: pointer;
 
       > div {
         @include flex(center, center);
+        cursor: pointer;
         transition: all 0.3s;
       }
 

@@ -60,6 +60,7 @@
 
     <el-image-viewer
       v-if="previewFileDialogData.isShow"
+      :teleported="true"
       :url-list="[previewFileDialogData.filePath]"
       @close="previewFileDialogData.isShow = false"
     />

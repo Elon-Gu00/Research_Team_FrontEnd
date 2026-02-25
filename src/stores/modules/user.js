@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-02-05 16:25:04
  * @LastEditors: Gyl
- * @LastEditTime: 2026-02-05 21:48:06
+ * @LastEditTime: 2026-02-24 14:36:16
  * @Description: 用户相关store
  */
 import store from '..';
@@ -28,6 +28,8 @@ export const useUserStore = defineStore(
 
     const isTeacher = computed(() => userInfo.value.userType === 'TEACHER');
 
+    const isAdmin = computed(() => userInfo.value.userType === 'ADMIN');
+
     const saveLoginData = (data) => {
       isLogin.value = true;
       loginData.value = JSON.parse(JSON.stringify(data));
@@ -43,6 +45,7 @@ export const useUserStore = defineStore(
       userInfo,
       getToken,
       isTeacher,
+      isAdmin,
       saveLoginData,
       saveUserInfo,
     };

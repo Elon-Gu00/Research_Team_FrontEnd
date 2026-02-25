@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-02-06 15:27:21
  * @LastEditors: Gyl
- * @LastEditTime: 2026-02-22 11:53:44
+ * @LastEditTime: 2026-02-24 14:45:57
  * @Description:
  */
 const userRoutes = [
@@ -56,6 +56,11 @@ const userRoutes = [
         path: 'search',
         name: 'Search',
         component: () => import(`@views/front/search.vue`),
+      },
+      {
+        path: 'newsDetail',
+        name: 'NewsDetail',
+        component: () => import(`@views/front/newsDetail.vue`),
       },
     ],
   },

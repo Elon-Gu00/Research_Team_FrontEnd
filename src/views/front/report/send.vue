@@ -8,8 +8,13 @@
     <CustomHeader header-text="发送报告"></CustomHeader>
     <div class="send-box">
       <el-form :model="sendData" label-position="top">
-        <el-form-item label="发送到" prop="team">
+        <el-form-item label="团队" prop="team">
           <el-select v-model="sendData.teamId">
+            <el-option v-for="team in userTeam" :label="team.teamName" :value="team.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="发送到" prop="receiverId" v-if="sendData.teamId !== ''">
+          <el-select v-model="sendData.receiverId">
             <el-option v-for="team in userTeam" :label="team.teamName" :value="team.id" />
           </el-select>
         </el-form-item>
