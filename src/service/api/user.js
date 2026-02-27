@@ -6,6 +6,8 @@ const URL = {
   DeleteUser: 'user/delete',
   UpdateUser: 'user/update',
   GetUserDetail: 'user/detail',
+  GetAllTeacherSelect: 'teacher/getSelect',
+  GetAllUserSelect: 'user/allUserSelect',
 };
 
 export const api_getUserList = (params) =>
@@ -41,4 +43,18 @@ export const api_updateUser = (data) =>
     url: URL.UpdateUser,
     method: 'post',
     data,
+  });
+
+export const api_getAllTeacherSelect = (params) =>
+  request({
+    url: URL.GetAllTeacherSelect,
+    method: 'get',
+    params,
+  });
+
+export const api_getAllUserSelect = (params) =>
+  request({
+    url: URL.GetAllUserSelect,
+    method: 'get',
+    params,
   });

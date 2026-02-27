@@ -12,7 +12,8 @@
           <el-input v-model="searchForm.username" clearable placeholder="请输入用户名" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary">查询</el-button>
+          <el-button type="primary" @click="getTableData('query')">查询</el-button>
+          <el-button @click="getTableData('reset')">重置</el-button>
         </el-form-item>
       </el-form>
       <el-button type="primary" @click="handleTableRow('add')">
@@ -26,7 +27,9 @@
       <el-table ref="tableRef" :data="tableData" border>
         <el-table-column label="用户ID" prop="userId"></el-table-column>
         <el-table-column label="用户名" prop="userName"></el-table-column>
-        <el-table-column label="用户类型" prop="userType"></el-table-column>
+        <el-table-column label="用户类型" prop="userType">
+          <template #default="{ row }"> {{ userTypeMap[row.userType] }} </template>
+        </el-table-column>
         <el-table-column label="邮箱" prop="email"></el-table-column>
         <el-table-column label="创建时间" prop="createdAt"></el-table-column>
         <el-table-column label="更新时间" prop="updatedAt"></el-table-column>
@@ -60,20 +63,45 @@
       cancel-btn-text="取消"
     >
       <template #dialogBody>
-        <el-form ref="operFormRef" :model="operForm" label-width="90">
-          <el-form-item label="用户名" prop="username">
+        <el-form
+          ref="operFormRef"
+          :model="operForm"
+          label-width="90"
+          :disabled="operType === 'see'"
+        >
+          <el-form-item
+            label="用户名"
+            prop="username"
+            :rules="{ required: true, message: '请输入用户名', trigger: 'blur' }"
+          >
             <el-input v-model="operForm.username" />
           </el-form-item>
-          <el-form-item label="用户名称" prop="name">
+
+          <el-form-item
+            label="密码"
+            prop="password"
+            :rules="{ required: true, message: '请输入密码', trigger: 'blur' }"
+          >
+            <el-input v-model="operForm.password" />
+          </el-form-item>
+          <el-form-item label="用户昵称" prop="name">
             <el-input v-model="operForm.name" />
           </el-form-item>
-          <el-form-item label="用户角色" prop="userType">
+          <el-form-item
+            label="用户角色"
+            prop="userType"
+            :rules="{ required: true, message: '请选择角色', trigger: 'change' }"
+          >
             <el-select v-model="operForm.userType">
               <el-option label="学生" value="STUDENT" />
               <el-option label="教师" value="TEACHER" />
             </el-select>
           </el-form-item>
-          <el-form-item label="邮箱" prop="email">
+          <el-form-item
+            label="邮箱"
+            prop="email"
+            :rules="{ required: true, message: '请输入邮箱', trigger: 'blur' }"
+          >
             <el-input v-model="operForm.email" />
           </el-form-item>
         </el-form>
@@ -83,6 +111,8 @@
 </template>
 
 <script setup name="UserManagement">
+import { omit } from 'lodash-es';
+
 const searchFormRef = ref(null);
 const searchForm = ref({});
 
@@ -100,11 +130,39 @@ const operType = ref('add');
 const operFormRef = ref(null);
 const operForm = ref({});
 
+const userTypeMap = {
+  STUDENT: '学生',
+  TEACHER: '教师',
+  ADMIN: '管理员',
+};
+
 watch(showDialog, (val) => {
   !val && operFormRef.value?.resetFields();
 });
 
-const getTableData = () => {};
+const getTableData = (type) => {
+  if (type === 'reset') {
+    searchFormRef.value.resetFields();
+    paginationOpt.current = 1;
+  }
+
+  if (type === 'query') {
+    paginationOpt.current = 1;
+  }
+
+  api_getUserList({
+    ...omit(paginationOpt, 'total'),
+    ...searchForm.value,
+  })
+    .then(({ data }) => {
+      tableData.value = data.records;
+      paginationOpt.total = data.total;
+    })
+    .catch(() => {
+      tableData.value = [];
+      paginationOpt.total = 0;
+    });
+};
 
 const changePagination = (type, val) => {
   if (type === 'changeSize') {
@@ -129,28 +187,84 @@ const dialogTitle = computed(() => {
 
 const handleTableRow = (type, rowData) => {
   operType.value = type;
+  if (rowData?.userType === 'ADMIN') {
+    ElMessage.error('无权限');
+    return;
+  }
   switch (type) {
     case 'see':
+      getDetail(rowData.userId);
+      showDialog.value = true;
       break;
     case 'edit':
+      getDetail(rowData.userId);
+      showDialog.value = true;
       break;
     case 'add':
       showDialog.value = true;
       break;
+    case 'delete':
+      ElMessageBox.confirm('是否要删除该数据？', 'Warning', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          api_deleteUser({
+            userId: rowData.userId,
+          })
+            .then(() => {
+              ElMessage.success('删除成功');
+              getTableData('reset');
+            })
+            .catch(() => {
+              ElMessage.error('删除失败');
+            });
+        })
+        .catch(() => {
+          ElMessage({
+            type: 'info',
+            message: '取消操作',
+          });
+        });
+      break;
   }
 };
 
-const getDetail = () => {};
+const getDetail = (userId) => {
+  api_getUserDetail({
+    userId,
+  }).then(({ data }) => {
+    operForm.value = data;
+    operForm.value.username = data.userName;
+  });
+};
 
 const handleDialog = (type) => {
   if (type !== 'confirm') {
     showDialog.value = false;
     return;
   }
+
   operFormRef.value.validate((valid) => {
     if (!valid) return;
 
-    //api
+    if (operType.value === 'see') return;
+
+    const api = operType.value === 'add' ? api_addUser : api_updateUser;
+
+    api({
+      ...omit(operForm.value, 'userName'),
+      userName: operForm.value.username,
+    })
+      .then(() => {
+        ElMessage.success('操作成功');
+        getTableData('reset');
+        showDialog.value = false;
+      })
+      .catch(() => {
+        ElMessage.error('操作失败');
+      });
   });
 };
 

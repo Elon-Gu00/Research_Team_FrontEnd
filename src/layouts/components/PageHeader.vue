@@ -59,8 +59,8 @@
             <el-input v-model="operationFormData.summary" />
           </el-form-item>
           <el-form-item label="内容" prop="content">
-            <!-- <WEditor :editorHeight="350" @create-editor="handleCreateEditor" /> -->
-            <el-input v-model="operationFormData.content" type="textarea" />
+            <WEditor :editorHeight="350" @create-editor="handleCreateEditor" />
+            <!-- <el-input v-model="operationFormData.content" type="textarea" /> -->
           </el-form-item>
           <el-form-item label="封面图" prop="covrUrl">
             <upload-file

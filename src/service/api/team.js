@@ -44,7 +44,7 @@ export const api_getTeamList = (params) =>
     params,
   });
 
-export const api_GetTeamSelect = (params) =>
+export const api_getTeamSelect = (params) =>
   request({
     url: URL.GetTeamSelect,
     method: 'GET',

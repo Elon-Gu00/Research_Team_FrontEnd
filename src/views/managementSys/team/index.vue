@@ -9,10 +9,11 @@
     <div class="search-box">
       <el-form ref="searchFormRef" :model="searchForm" inline label-suffix=":">
         <el-form-item label="团队名称" prop="name">
-          <el-input v-model="searchForm.username" clearable placeholder="请输入团队名称" />
+          <el-input v-model="searchForm.name" clearable placeholder="请输入团队名称" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary">查询</el-button>
+          <el-button type="primary" @click="getTableData()">查询</el-button>
+          <el-button @click="getTableData('reset')">重置</el-button>
         </el-form-item>
       </el-form>
       <el-button type="primary" @click="handleTableRow('add')">
@@ -27,7 +28,7 @@
         <el-table-column label="团队ID" prop="teamId"></el-table-column>
         <el-table-column label="团队名称" prop="name"></el-table-column>
         <el-table-column label="团队描述" prop="description"></el-table-column>
-        <el-table-column label="创建时间" prop="creatAt"></el-table-column>
+        <el-table-column label="创建时间" prop="createdAt"></el-table-column>
         <el-table-column label="操作" min-width="150">
           <template #default="{ row }">
             <el-button link type="primary" @click="handleTableRow('see', row)">查看</el-button>
@@ -58,9 +59,18 @@
       cancel-btn-text="取消"
     >
       <template #dialogBody>
-        <el-form ref="operFormRef" :model="operForm" label-width="90">
-          <el-form-item label="领导人" prop="leaderId">
-            <el-select>
+        <el-form
+          ref="operFormRef"
+          :model="operForm"
+          label-width="90"
+          :disabled="operType === 'see'"
+        >
+          <el-form-item
+            label="领导人"
+            prop="leaderId"
+            :rules="{ required: true, message: '请选择领导人', trigger: 'change' }"
+          >
+            <el-select v-model="operForm.leaderId">
               <el-option
                 v-for="leader in leaderOpts"
                 :label="leader.name"
@@ -69,7 +79,11 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="团队名称" prop="name">
+          <el-form-item
+            label="团队名称"
+            prop="name"
+            :rules="{ required: true, message: '请输入团队名称', trigger: 'blur' }"
+          >
             <el-input v-model="operForm.name" />
           </el-form-item>
           <el-form-item label="团队描述" prop="description">
@@ -82,6 +96,8 @@
 </template>
 
 <script setup name="TeamManagement">
+import { omit } from 'lodash-es';
+
 const searchFormRef = ref(null);
 const searchForm = ref({});
 
@@ -104,9 +120,35 @@ watch(showDialog, (val) => {
   !val && operFormRef.value?.resetFields();
 });
 
-const getLeaderOptions = () => {};
+const getLeaderOptions = () => {
+  api_getAllTeacherSelect()
+    .then(({ data }) => {
+      leaderOpts.value = data;
+    })
+    .catch(() => {
+      leaderOpts.value = [];
+    });
+};
 
-const getTableData = () => {};
+const getTableData = (type) => {
+  if (type === 'reset') {
+    searchFormRef.value.resetFields();
+    paginationOpt.current = 1;
+  }
+
+  api_getTeamList({
+    ...omit(paginationOpt, 'total'),
+    ...searchForm.value,
+  })
+    .then(({ data }) => {
+      tableData.value = data.records;
+      paginationOpt.total = data.total;
+    })
+    .catch(() => {
+      tableData.value = [];
+      paginationOpt.total = 0;
+    });
+};
 
 const changePagination = (type, val) => {
   if (type === 'changeSize') {
@@ -133,16 +175,51 @@ const handleTableRow = (type, rowData) => {
   operType.value = type;
   switch (type) {
     case 'see':
+      getDetail(rowData.teamId);
+      showDialog.value = true;
       break;
     case 'edit':
+      getDetail(rowData.teamId);
+      showDialog.value = true;
       break;
     case 'add':
       showDialog.value = true;
       break;
+    case 'delete':
+      ElMessageBox.confirm('是否要删除该数据？', 'Warning', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          api_deleteTeam({
+            teamId: rowData.teamId,
+          })
+            .then(() => {
+              ElMessage.success('删除成功');
+              getTableData('reset');
+            })
+            .catch(() => {
+              ElMessage.error('删除失败');
+            });
+        })
+        .catch(() => {
+          ElMessage({
+            type: 'info',
+            message: '取消操作',
+          });
+        });
+      break;
   }
 };
 
-const getDetail = () => {};
+const getDetail = (id) => {
+  api_getTeamDetailById({
+    id,
+  }).then(({ data }) => {
+    operForm.value = data;
+  });
+};
 
 const handleDialog = (type) => {
   if (type !== 'confirm') {
@@ -152,7 +229,21 @@ const handleDialog = (type) => {
   operFormRef.value.validate((valid) => {
     if (!valid) return;
 
-    //api
+    if (operType.value === 'see') return;
+
+    const api = operType.value === 'add' ? api_teacherAddTeam : api_teacherUpdateTeam;
+
+    api({
+      ...operForm.value,
+    })
+      .then(() => {
+        ElMessage.success('操作成功');
+        getTableData('reset');
+        showDialog.value = false;
+      })
+      .catch(() => {
+        ElMessage.error('操作失败');
+      });
   });
 };
 
