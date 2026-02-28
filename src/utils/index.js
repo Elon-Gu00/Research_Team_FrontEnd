@@ -70,3 +70,33 @@ export const validateEmailStrict = (val) => {
 
   return /^(?!.*[._%+-]{2})[a-zA-Z0-9._%+-]{1,64}@[a-zA-Z0-9.-]{1,255}\.[a-zA-Z]{2,}$/.test(val);
 };
+
+/**
+ * 文件下载工具函数
+ * @param {string} fileName - 要下载的文件名
+ * @param {string} [customName] - 自定义下载后的文件名（可选）
+ */
+export const downloadFile = async (fileName, customName) => {
+  try {
+    const response = await api_download(fileName);
+
+    const blob = new Blob([response.data]);
+    const downloadUrl = window.URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.style.display = 'none';
+    link.href = downloadUrl;
+    link.download = customName || fileName;
+
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    }, 100);
+  } catch (error) {
+    console.error('下载失败:', error);
+    throw error;
+  }
+};

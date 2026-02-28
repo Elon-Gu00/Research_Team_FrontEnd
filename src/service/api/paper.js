@@ -1,3 +1,10 @@
+/**
+ * @Author: Gyl
+ * @Date: 2026-02-25 11:39:39
+ * @LastEditors: Gyl
+ * @LastEditTime: 2026-03-01 00:38:40
+ * @Description:
+ */
 import request from '..';
 
 const URL = {
@@ -5,7 +12,7 @@ const URL = {
   AddPaper: 'paper/add',
   DeletePaper: 'paper/delete',
   UpdatePaper: 'paper/update',
-  GetPaperDetail: 'paper/detail',
+  GetPaperDetail: 'paper/getById',
 };
 
 export const api_getPaperList = (params) =>

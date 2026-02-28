@@ -8,11 +8,11 @@
     <p>论文管理</p>
     <div class="search-box">
       <el-form ref="searchFormRef" :model="searchForm" inline label-suffix=":">
-        <el-form-item label="论文标题" prop="title">
-          <el-input v-model="searchForm.username" clearable placeholder="请输入论文标题" />
+        <el-form-item label="论文标题" prop="name">
+          <el-input v-model="searchForm.name" clearable placeholder="请输入论文标题" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary">查询</el-button>
+          <el-button type="primary" @click="getTableData()">查询</el-button>
         </el-form-item>
       </el-form>
       <el-button type="primary" @click="handleTableRow('add')">
@@ -26,11 +26,16 @@
       <el-table ref="tableRef" :data="tableData" border>
         <el-table-column label="论文ID" prop="paperId"></el-table-column>
         <el-table-column label="标题" prop="title"></el-table-column>
-        <el-table-column label="摘要" prop="abstract"></el-table-column>
-        <el-table-column label="关键词" prop="keyword"></el-table-column>
+        <el-table-column label="摘要" prop="abstractText"></el-table-column>
+        <el-table-column label="关键词" prop="keywords"></el-table-column>
         <el-table-column label="期刊" prop="journal"></el-table-column>
         <el-table-column label="论文发布日期" prop="publishDate"></el-table-column>
-        <el-table-column label="上传时间" prop="creatAt"></el-table-column>
+        <el-table-column label="上传时间" prop="createdAt"></el-table-column>
+        <el-table-column label="状态" prop="status">
+          <template #default="{ row }">
+            {{ row.status === 'DRAFT' ? '草稿' : '发布' }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" min-width="150">
           <template #default="{ row }">
             <el-button link type="primary" @click="handleTableRow('download', row)">下载</el-button>
@@ -61,24 +66,64 @@
       cancel-btn-text="取消"
     >
       <template #dialogBody>
-        <el-form ref="operFormRef" :model="operForm" label-width="90">
-          <el-form-item label="论文标题" prop="title">
-            <el-input v-model="operForm.title" />
+        <el-form
+          ref="operFormRef"
+          :model="operForm"
+          label-width="90"
+          label-suffix=":"
+          :disabled="operType === 'see'"
+        >
+          <el-form-item
+            label="论文标题"
+            prop="title"
+            :rules="{ required: true, message: '请输入论文标题', trigger: 'blur' }"
+          >
+            <el-input v-model="operForm.title" placeholder="请输入论文标题" />
           </el-form-item>
-          <el-form-item label="论文摘要" prop="abstract">
-            <el-input v-model="operForm.abstract" />
+          <el-form-item label="论文摘要" prop="abstractText">
+            <el-input v-model="operForm.abstractText" placeholder="请输入论文摘要" />
           </el-form-item>
-          <el-form-item label="关键词" prop="keyword">
-            <el-input v-model="operForm.keyword" />
+          <el-form-item label="关键词" prop="keywords">
+            <el-input v-model="operForm.keywords" placeholder="请输入关键词" />
           </el-form-item>
           <el-form-item label="期刊" prop="journal">
-            <el-input v-model="operForm.journal" />
+            <el-input v-model="operForm.journal" placeholder="请输入期刊" />
           </el-form-item>
-          <el-form-item label="发布日期" prop="publishData">
-            <el-date-picker></el-date-picker>
+          <el-form-item label="发布日期" prop="publishDate">
+            <el-date-picker
+              v-model="operForm.publishDate"
+              placeholder="请选择发布日期"
+            ></el-date-picker>
           </el-form-item>
-          <el-form-item label="文件" prop="journal">
-            <UploadFile />
+          <el-form-item
+            label="文件"
+            prop="paperFile"
+            :rules="{
+              required: true,
+              message: '请上传论文文件',
+              trigger: 'change',
+            }"
+          >
+            <UploadFile
+              v-model:file-list="operForm.paperFile"
+              :uploadPath="uploadPath"
+              :upload-headers="uploadHeaders"
+              :sizeLimit="50"
+              :hide-upload-btn="operForm.paperFile.length >= 1"
+              acceptList=".pdf,.PDF,.doc,.docx"
+              upload-tip="可以上传pdf，doc，docx格式文件，不超过50MB"
+              @upload-success="handleUploadSuccess"
+            />
+          </el-form-item>
+          <el-form-item
+            label="状态"
+            prop="status"
+            :rules="{ required: true, message: '请选择状态', trigger: 'change' }"
+          >
+            <el-radio-group v-model="operForm.status">
+              <el-radio value="DRAFT">草稿</el-radio>
+              <el-radio value="PUBLISHED">发布</el-radio>
+            </el-radio-group>
           </el-form-item>
         </el-form>
       </template>
@@ -87,8 +132,13 @@
 </template>
 
 <script setup name="PaperManagement">
+import { omit } from 'lodash-es';
+const { userInfo } = useUserStore();
+
 const searchFormRef = ref(null);
-const searchForm = ref({});
+const searchForm = ref({
+  name: '',
+});
 
 const tableRef = ref(null);
 const tableData = ref([]);
@@ -102,13 +152,35 @@ const paginationOpt = reactive({
 const showDialog = ref(false);
 const operType = ref('add');
 const operFormRef = ref(null);
-const operForm = ref({});
+const operForm = ref({
+  paperFile: [],
+  publishDate: null,
+});
+
+const { uploadHeaders, uploadPath } = useUploadHeaders('files/upload');
 
 watch(showDialog, (val) => {
   !val && operFormRef.value?.resetFields();
 });
 
-const getTableData = () => {};
+const getTableData = (type) => {
+  if (type === 'reset') {
+    searchFormRef.value.resetFields();
+    paginationOpt.current = 1;
+  }
+  api_getPaperList({
+    ...omit(paginationOpt, 'total'),
+    ...searchForm.value,
+  })
+    .then(({ data }) => {
+      tableData.value = data.records;
+      paginationOpt.total = data.total;
+    })
+    .catch(() => {
+      tableData.value = [];
+      paginationOpt.total = 0;
+    });
+};
 
 const changePagination = (type, val) => {
   if (type === 'changeSize') {
@@ -134,17 +206,68 @@ const dialogTitle = computed(() => {
 const handleTableRow = (type, rowData) => {
   operType.value = type;
   switch (type) {
-    case 'see':
+    case 'download':
+      downloadFile(rowData.fileUrl, rowData.fileUrl);
       break;
     case 'edit':
+      getDetail(rowData.paperId);
+      showDialog.value = true;
       break;
     case 'add':
       showDialog.value = true;
       break;
+    case 'delete':
+      ElMessageBox.confirm('是否要删除该数据？', 'Warning', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          api_deletePaper({
+            paperId: rowData.paperId,
+          })
+            .then(() => {
+              ElMessage.success('删除成功');
+              getTableData('reset');
+            })
+            .catch(() => {
+              ElMessage.error('删除失败');
+            });
+        })
+        .catch(() => {
+          ElMessage({
+            type: 'info',
+            message: '取消操作',
+          });
+        });
+      break;
   }
 };
 
-const getDetail = () => {};
+const getDetail = (paperId) => {
+  api_getPaperDetail({ paperId })
+    .then(({ data }) => {
+      operForm.value = data;
+      operForm.value.paperFile = [
+        {
+          name: data.fileUrl,
+          url: data.filePreviewUrl,
+          uploadUrl: data.fileUrl,
+        },
+      ];
+    })
+    .catch(() => {});
+};
+
+const handleUploadSuccess = ({ result, uploadFile, uploadFiles }) => {
+  operForm.value.paperFile = [
+    {
+      name: result.url,
+      url: result.previewUrl,
+      uploadUrl: result.url,
+    },
+  ];
+};
 
 const handleDialog = (type) => {
   if (type !== 'confirm') {
@@ -154,7 +277,21 @@ const handleDialog = (type) => {
   operFormRef.value.validate((valid) => {
     if (!valid) return;
 
-    //api
+    const api = operType.value === 'add' ? api_addPaper : api_updatePaper;
+
+    api({
+      ...operForm.value,
+      fileUrl: operForm.value.paperFile[0]?.uploadUrl,
+      uploaderId: userInfo.userId,
+    })
+      .then(() => {
+        ElMessage.success('操作成功');
+        getTableData();
+        showDialog.value = false;
+      })
+      .catch(() => {
+        ElMessage.error('操作失败');
+      });
   });
 };
 
