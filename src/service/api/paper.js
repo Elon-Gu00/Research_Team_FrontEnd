@@ -13,6 +13,8 @@ const URL = {
   DeletePaper: 'paper/delete',
   UpdatePaper: 'paper/update',
   GetPaperDetail: 'paper/getById',
+  GetTeamPaper: 'paper/teamPaper',
+  GetUserPaper: 'paper/userPaper',
 };
 
 export const api_getPaperList = (params) =>
@@ -46,6 +48,20 @@ export const api_updatePaper = (data) =>
 export const api_getPaperDetail = (params) =>
   request({
     url: URL.GetPaperDetail,
+    method: 'GET',
+    params,
+  });
+
+export const api_getTeamPaper = (params) =>
+  request({
+    url: URL.GetTeamPaper,
+    method: 'GET',
+    params,
+  });
+
+export const api_getUserPaper = (params) =>
+  request({
+    url: URL.GetUserPaper,
     method: 'GET',
     params,
   });

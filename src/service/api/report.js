@@ -6,6 +6,7 @@ const URL = {
   DeleteReport: 'report/delete',
   TeacherReadReport: 'report/read',
   GetReportList: 'report/page',
+  GetUserReport: '',
 };
 
 export const api_sendReport = (data) =>
@@ -39,6 +40,13 @@ export const api_teacherReadReport = (data) =>
 export const api_getReportList = (params) =>
   request({
     url: URL.GetReportList,
+    method: 'GET',
+    params,
+  });
+
+export const api_getUserReport = (params) =>
+  request({
+    url: URL.GetUserReport,
     method: 'GET',
     params,
   });

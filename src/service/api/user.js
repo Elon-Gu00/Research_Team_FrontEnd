@@ -1,3 +1,10 @@
+/**
+ * @Author: Gyl
+ * @Date: 2026-03-01 01:18:12
+ * @LastEditors: Gyl
+ * @LastEditTime: 2026-03-02 16:37:49
+ * @Description:
+ */
 import request from '..';
 
 const URL = {
@@ -8,6 +15,10 @@ const URL = {
   GetUserDetail: 'user/detail',
   GetAllTeacherSelect: 'teacher/getSelect',
   GetAllUserSelect: 'user/allUserSelect',
+  GetStudentInfo: 'student/getById',
+  GetTeacherInfo: 'teacher/getInfoById',
+  UpdateStudentInfo: 'student/update',
+  UpdateTeacherInfo: 'teacher/update',
 };
 
 export const api_getUserList = (params) =>
@@ -57,4 +68,32 @@ export const api_getAllUserSelect = (params) =>
     url: URL.GetAllUserSelect,
     method: 'get',
     params,
+  });
+
+export const api_getStudentInfo = (params) =>
+  request({
+    url: URL.GetStudentInfo,
+    method: 'get',
+    params,
+  });
+
+export const api_getTeacherInfo = (params) =>
+  request({
+    url: URL.GetTeacherInfo,
+    method: 'get',
+    params,
+  });
+
+export const api_updateStudentInfo = (data) =>
+  request({
+    url: URL.UpdateStudentInfo,
+    method: 'post',
+    data,
+  });
+
+export const api_updateTeacherInfo = (data) =>
+  request({
+    url: URL.UpdateTeacherInfo,
+    method: 'post',
+    data,
   });

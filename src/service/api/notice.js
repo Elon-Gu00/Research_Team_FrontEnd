@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-03-01 01:18:12
  * @LastEditors: Gyl
- * @LastEditTime: 2026-03-01 11:01:39
+ * @LastEditTime: 2026-03-02 16:12:18
  * @Description:
  */
 import request from '..';
@@ -14,6 +14,7 @@ const URL = {
   DeleteNotice: 'notice/delete',
   UpdateNotice: 'notice/update',
   GetNoticeDetail: 'notice/getDetail',
+  GetUserNotice: 'notice/getByAuthor',
 };
 
 export const api_getTeamnotice = (params) =>
@@ -54,6 +55,13 @@ export const api_updateNotice = (data) =>
 export const api_getNoticeDetail = (params) =>
   request({
     url: URL.GetNoticeDetail,
+    method: 'GET',
+    params,
+  });
+
+export const api_getUserNotice = (params) =>
+  request({
+    url: URL.GetUserNotice,
     method: 'GET',
     params,
   });

@@ -10,7 +10,7 @@
         <div class="notice-title-oper">
           <span>{{ '发布公告' }}</span>
           <div class="oper-box">
-            <el-button type="success" size="large" @click="showDialog = true">
+            <el-button type="success" size="large" @click="openDialog('add')">
               <template #icon><icon-ep-position /></template>
               发布公告
             </el-button>
@@ -26,8 +26,8 @@
           <span class="upload-time">{{ '发布时间 ' + notice.createAt }}</span>
         </div>
         <div class="oper-btn">
-          <el-button type="success">修改</el-button>
-          <el-button type="danger">删除</el-button>
+          <el-button type="success" @click="openDialog('edit', notice)">修改</el-button>
+          <el-button type="danger" @click="openDialog('delete', notice)">删除</el-button>
         </div>
       </div>
     </div>
@@ -59,7 +59,12 @@
           </el-form-item>
           <el-form-item v-if="operationForm.targetType === 'TEAM'" label="目标团队" prop="targetId">
             <el-select v-model="operationForm.targetId">
-              <el-option v-for="team in teamOptions" :label="team.teamName" :value="team.id" />
+              <el-option
+                v-for="team in teamOpts"
+                :label="team.name"
+                :value="team.id"
+                :key="team.id"
+              />
             </el-select>
           </el-form-item>
         </el-form>
@@ -69,33 +74,88 @@
 </template>
 
 <script setup name="Notice">
+const userStore = useUserStore();
+const { userInfo } = storeToRefs(userStore);
+
 const noticeData = ref([]);
 const operationFormRef = ref(null);
 const showDialog = ref(false);
+const operType = ref('add');
 const operationForm = ref({
   targetType: null,
 });
-const teamOptions = ref([]);
+const teamOpts = ref([]);
 
 watch(showDialog, (val) => {
   !val && operationFormRef.value.resetFields();
 });
 
 const getNoticeData = () => {
-  noticeData.value = [];
-  for (let i = 0; i < 50; i++) {
-    noticeData.value.push({
-      title: 'cehsi' + i,
-      role: 'cehsi',
-      createAt: '2026-2-10 16:58:00',
+  api_getUserNotice({
+    authorId: userInfo.value.userId,
+  })
+    .then(({ data }) => {
+      noticeData.value = data;
+    })
+    .catch(() => {
+      noticeData.value = [];
     });
+};
+
+const getTeamOptions = () => {
+  api_getTeamSelect()
+    .then(({ data }) => {
+      teamOpts.value = data;
+    })
+    .catch(() => {
+      teamOpts.value = [];
+    });
+};
+
+const getDetail = (noticeId) => {
+  api_getNoticeDetail({
+    noticeId,
+  })
+    .then(({ data }) => {
+      operationForm.value = data;
+    })
+    .catch(() => {});
+};
+
+const openDialog = (type, data) => {
+  operType.value = type;
+  switch (type) {
+    case 'add':
+      showDialog.value = true;
+      break;
+    case 'edit':
+      getDetail(data.noticeId);
+      showDialog.value = true;
+      break;
   }
 };
 
-const getTeamOptions = () => {};
-
 const handleDialog = (type) => {
   if (type !== 'confirm') showDialog.value = false;
+
+  operationFormRef.value.validate((valid) => {
+    if (!valid) return;
+
+    const api = operType.value === 'add' ? api_addNotice : api_updateNotice;
+
+    api({
+      ...operationForm.value,
+      authorId: userInfo.userId,
+    })
+      .then(() => {
+        ElMessage.success('操作成功');
+        getNoticeData();
+        showDialog.value = false;
+      })
+      .catch(() => {
+        ElMessage.error('操作失败');
+      });
+  });
 };
 
 getNoticeData();

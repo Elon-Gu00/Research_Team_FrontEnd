@@ -82,16 +82,59 @@
         </div>
       </div>
     </div>
+    <CustomDialog :is-show="showDialog" title="修改个人信息" width="40%" @dialog-handle="handleDialog">
+      <el-form ref="operFormRef" :model="operForm">
+        <el-form-item label="姓名" prop="name">
+          <el-input v-model="operForm.name" placeholder="请输入"/>
+        </el-form-item>
+        <el-form-item label="学历" prop="degree">
+          <el-input v-model="operForm.degree" placeholder="请输入"/>
+        </el-form-item>
+        <el-form-item label="性别" prop="sex">
+          <el-radio-group v-model="operForm.sex">
+              <el-radio value="0">男</el-radio>
+              <el-radio value="1">女</el-radio>
+            </el-radio-group>
+        </el-form-item>
+        <el-form-item label="学位" prop="diploma">
+          <el-input v-model="operForm.diploma" placeholder="请输入"/>
+        </el-form-item>
+        <el-form-item label="学院" prop="department">
+          <el-input v-model="operForm.department" placeholder="请输入"/>
+        </el-form-item>
+        <el-form-item label="职称" prop="title">
+          <el-input v-model="operForm.title" placeholder="请输入"/>
+        </el-form-item>
+        <el-form-item label="综合介绍" prop="generalIntro">
+          <el-input v-model="operForm.generalIntro" placeholder="请输入" type="textarea" :rows="6"/>
+        </el-form-item>
+        <el-form-item label="个人经历" prop="exp">
+          <el-input v-model="operForm.exp" placeholder="请输入" type="textarea" :rows="6"/>
+        </el-form-item>
+        <el-form-item label="获奖信息" prop="rewardInfo">
+          <el-input v-model="operForm.rewardInfo" placeholder="请输入" type="textarea" :rows="6"/>
+        </el-form-item>
+        <el-form-item label="科学研究" prop="research">
+          <el-input v-model="operForm.research" placeholder="请输入" type="textarea" :rows="6"/>
+        </el-form-item>
+      </el-form>
+    </CustomDialog>
   </div>
 </template>
 
 <script setup name="Mine">
+import { api_updateStudentInfo, api_updateTeacherInfo } from '@/service/api/user';
+
+
 const route = useRoute();
 const userStore = useUserStore();
 const { userInfo } = storeToRefs(userStore);
 
 const isTeacher = computed(() => userInfo.value.userType === 'TEACHER');
 const isCheck = computed(() => !checkNullValue(route.query.id));
+const showDialog = ref(false)
+const operForm = ref({})
+const operFormRef = ref(null)
 
 const personalInfo = ref({
   baseInfo: {
@@ -105,6 +148,41 @@ const personalInfo = ref({
   rewardInfo: '',
   research:''
 })
+
+const getUserInfo = () => {
+  const api = isTeacher.value ? api_getTeacherInfo : api_getStudentInfo;
+
+  api({
+    id: isCheck.value ? route.query.id : userInfo.value.userId
+  }).then(({data}) => {
+    personalInfo.value = data
+    console.log(personalInfo.value)
+  })
+}
+
+const handleDialog = (type) => {
+  if (type !== 'confirm') {
+    showDialog.value = false;
+    return
+  }
+
+  operFormRef.value.validate((valid) => {
+    if (!valid) return;
+
+    const api = isTeacher.value ? api_updateTeacherInfo : api_updateStudentInfo;
+
+    api({
+      ...operForm.value
+    }).then(() => {
+      ElMessage.success('更新成功')
+      getUserInfo()
+    }).catch(() => {
+      ElMessage.success('更新失败')
+    })
+  })
+}
+
+getUserInfo()
 </script>
 
 <style lang="scss" scoped>

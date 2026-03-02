@@ -22,11 +22,15 @@
       <div class="report-item" v-for="report in reportData">
         <i class="iconfont icon-Report"></i>
         <div class="title">
-          <span>{{ report.title }}</span>
-          <span class="upload-time">{{ '发送时间 ' + report.createAt }}</span>
+          <span>{{ report.subject }}</span>
+          <span class="upload-time">{{ '发送时间 ' + report.sendAt }}</span>
         </div>
         <div class="oper-btn">
-          <el-button type="success">查看</el-button>
+          <el-button
+            type="success"
+            @click="router.push({ name: 'Send', query: { id: report.reportId } })"
+            >查看</el-button
+          >
         </div>
       </div>
     </div>
@@ -34,21 +38,24 @@
 </template>
 
 <script setup name="Report">
+const userStore = useUserStore();
+const { userInfo } = storeToRefs(userStore);
 const router = useRouter();
 const reportData = ref([]);
 
-const getPaperData = () => {
-  reportData.value = [];
-  for (let i = 0; i < 50; i++) {
-    reportData.value.push({
-      title: 'cehsi' + i,
-      role: 'cehsi',
-      createAt: '2026-2-10 16:58:00',
+const getReportData = () => {
+  api_getUserReport({
+    userId: userInfo.value.userId,
+  })
+    .then(({ data }) => {
+      reportData.value = data;
+    })
+    .catch(() => {
+      reportData.value = [];
     });
-  }
 };
 
-getPaperData();
+getReportData();
 </script>
 
 <style lang="scss" scoped>

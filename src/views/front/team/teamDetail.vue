@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-03-01 01:18:12
  * @LastEditors: Gyl
- * @LastEditTime: 2026-03-02 12:03:26
+ * @LastEditTime: 2026-03-02 14:55:40
  * @Description:
 -->
 <template>
@@ -333,7 +333,9 @@ const getUserData = () => {
     teamId: route.query.teamId,
   })
     .then(({ data }) => {
-      listData.value = data.records;
+      listData.value = data.records
+        .filter((item) => item.joinedStatus === 'joined')
+        .map((item) => item);
       isInTeam.value = data.records.some((item) => item.id === userInfo.value.userId);
     })
     .catch(() => {
@@ -355,7 +357,17 @@ const getNoticeData = () => {
     });
 };
 
-const getPaperData = () => {};
+const getPaperData = () => {
+  api_getTeamPaper({
+    teamId: route.query.teamId,
+  })
+    .then(({ data }) => {
+      listData.value = data;
+    })
+    .catch(() => {
+      listData.value = [];
+    });
+};
 
 const getApplyData = () => {
   api_getTeamAllMember({

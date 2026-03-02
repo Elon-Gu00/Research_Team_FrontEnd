@@ -10,7 +10,7 @@
         <div class="paper-title-oper">
           <span>{{ '论文' }}</span>
           <div class="oper-box">
-            <el-button type="success" size="large" @click="showDialog = true">
+            <el-button type="success" size="large" @click="openDialog('add')">
               <template #icon><icon-ep-upload /></template>
               上传论文
             </el-button>
@@ -26,12 +26,13 @@
           <span class="upload-time">{{ '上传时间 ' + paper.createAt }}</span>
         </div>
         <div class="oper-btn">
-          <el-button type="success">下载</el-button>
+          <el-button type="success" @click="openDialog('download', paper)">下载</el-button>
+          <el-button type="success" @click="openDialog('edit', paper)">修改</el-button>
         </div>
       </div>
     </div>
     <CustomDialog
-      title="上传论文"
+      :title="operType === 'add' ? '上传论文' : '修改'"
       :is-show="showDialog"
       width="30%"
       confirm-btn-text="确定"
@@ -55,6 +56,31 @@
               @upload-success="handleUploadSuccess"
             />
           </el-form-item>
+          <el-form-item
+            label="类型"
+            prop="type"
+            :rules="{ required: true, message: '请选择类型', trigger: 'change' }"
+          >
+            <el-radio-group v-model="operationForm.type">
+              <el-radio value="ALL">公开</el-radio>
+              <el-radio value="TEAM">团体</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item
+            label="关联团队"
+            prop="teamId"
+            :rules="{ required: true, message: '请选择团队', trigger: 'change' }"
+            v-if="operForm?.type === 'TEAM'"
+          >
+            <el-select v-model="operationForm.teamId">
+              <el-option
+                v-for="team in teamOpts"
+                :label="team.name"
+                :value="team.id"
+                :key="team.id"
+              />
+            </el-select>
+          </el-form-item>
         </el-form>
       </template>
     </CustomDialog>
@@ -62,6 +88,8 @@
 </template>
 
 <script setup name="Paper">
+const userStore = useUserStore();
+const { userInfo } = storeToRefs(userStore);
 const { uploadHeaders, uploadPath } = useUploadHeaders('files/upload');
 
 const paperData = ref([]);
@@ -71,31 +99,94 @@ const operationForm = ref({
   title: '',
   paperFile: [],
 });
+const operType = ref('add');
+const teamOpts = ref([]);
 
 watch(showDialog, (val) => {
   !val && operationFormRef.value.resetFields();
 });
 
 const getPaperData = () => {
-  paperData.value = [];
-  for (let i = 0; i < 50; i++) {
-    paperData.value.push({
-      title: 'cehsi' + i,
-      role: 'cehsi',
-      createAt: '2026-2-10 16:58:00',
+  api_getUserPaper({
+    userId: userInfo.value.userId,
+  }).then(({ data }) => {
+    paperData.value = data;
+  });
+};
+
+const getTeamOptions = () => {
+  api_getTeamSelect()
+    .then(({ data }) => {
+      teamOpts.value = data;
+    })
+    .catch(() => {
+      teamOpts.value = [];
     });
+};
+
+const openDialog = (type, data) => {
+  operType.value = type;
+  switch (type) {
+    case 'download':
+      downloadFile(data.fileUrl, data.fileUrl);
+      break;
+    case 'edit':
+      getDetail(data.paperId);
+      showDialog.value = true;
+      break;
+    case 'add':
+      showDialog.value = true;
+      break;
   }
 };
 
+const getDetail = (paperId) => {
+  api_getPaperDetail({ paperId })
+    .then(({ data }) => {
+      operationForm.value = data;
+      operationForm.value.paperFile = [
+        {
+          name: data.fileUrl,
+          url: data.filePreviewUrl,
+          uploadUrl: data.fileUrl,
+        },
+      ];
+    })
+    .catch(() => {});
+};
+
 const handleUploadSuccess = ({ result, uploadFile }) => {
-  operationForm.value.paperFile = [{ fileUrl: result.fileUrl, name: uploadFile.name }];
+  operationForm.value.paperFile = [
+    { name: result.url, url: result.previewUrl, uploadUrl: result.url },
+  ];
 };
 
 const handleDialog = (type) => {
   if (type !== 'confirm') showDialog.value = false;
+
+  operationFormRef.value.validate((valid) => {
+    if (!valid) return;
+
+    const api = operType.value === 'add' ? api_addPaper : api_updatePaper;
+
+    api({
+      ...operationForm.value,
+      fileUrl: operationForm.value.paperFile[0]?.uploadUrl,
+      uploaderId: userInfo.userId,
+    })
+      .then(() => {
+        ElMessage.success('操作成功');
+        getTableData();
+        showDialog.value = false;
+      })
+      .catch(() => {
+        ElMessage.error('操作失败');
+      });
+  });
 };
 
 getPaperData();
+getTeamOptions();
 </script>
 
 <style lang="scss" scoped>

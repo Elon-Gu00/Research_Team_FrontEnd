@@ -25,11 +25,19 @@
     <div class="table-container">
       <el-table ref="tableRef" :data="tableData" border>
         <el-table-column label="论文ID" prop="paperId"></el-table-column>
+        <el-table-column label="上传者" prop="uploaderName"></el-table-column>
         <el-table-column label="标题" prop="title"></el-table-column>
         <el-table-column label="摘要" prop="abstractText"></el-table-column>
         <el-table-column label="关键词" prop="keywords"></el-table-column>
         <el-table-column label="期刊" prop="journal"></el-table-column>
         <el-table-column label="论文发布日期" prop="publishDate"></el-table-column>
+        <el-table-column label="类型" prop="type">
+          <template #default="{ row }">
+            {{ row.type === 'ALL' ? '公开' : '团体' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="关联团队Id" prop="teamId"> </el-table-column>
+        <el-table-column label="上传者" prop="uploaderName"></el-table-column>
         <el-table-column label="上传时间" prop="createdAt"></el-table-column>
         <el-table-column label="状态" prop="status">
           <template #default="{ row }">
@@ -116,6 +124,31 @@
             />
           </el-form-item>
           <el-form-item
+            label="类型"
+            prop="type"
+            :rules="{ required: true, message: '请选择类型', trigger: 'change' }"
+          >
+            <el-radio-group v-model="operForm.type">
+              <el-radio value="ALL">公开</el-radio>
+              <el-radio value="TEAM">团体</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item
+            label="关联团队"
+            prop="teamId"
+            :rules="{ required: true, message: '请选择团队', trigger: 'change' }"
+            v-if="operForm?.type === 'TEAM'"
+          >
+            <el-select v-model="operForm.teamId">
+              <el-option
+                v-for="team in teamOpts"
+                :label="team.name"
+                :value="team.id"
+                :key="team.id"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item
             label="状态"
             prop="status"
             :rules="{ required: true, message: '请选择状态', trigger: 'change' }"
@@ -156,12 +189,23 @@ const operForm = ref({
   paperFile: [],
   publishDate: null,
 });
+const teamOpts = ref([]);
 
 const { uploadHeaders, uploadPath } = useUploadHeaders('files/upload');
 
 watch(showDialog, (val) => {
   !val && operFormRef.value?.resetFields();
 });
+
+const getTeamOptions = () => {
+  api_getTeamSelect()
+    .then(({ data }) => {
+      teamOpts.value = data;
+    })
+    .catch(() => {
+      teamOpts.value = [];
+    });
+};
 
 const getTableData = (type) => {
   if (type === 'reset') {
@@ -296,6 +340,7 @@ const handleDialog = (type) => {
 };
 
 getTableData();
+getTeamOptions();
 </script>
 
 <style lang="scss" scoped>
