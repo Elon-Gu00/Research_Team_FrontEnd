@@ -7,7 +7,7 @@
   <div class="team-list">
     <custom-header header-text="我的团队" :show-back-btn="false"></custom-header>
     <div class="joined-list">
-      <div class="team-card" v-for="team in teamList" @click="handleToDetail">
+      <div class="team-card" v-for="team in teamList" @click="handleToDetail(team.teamId)">
         <div class="team-name">
           {{ team.teamName }}
         </div>
@@ -44,10 +44,10 @@
         >
           <el-form-item
             label="团队名称"
-            prop="teamName"
+            prop="name"
             :rules="{ required: true, message: '请输入团队名称', trigger: 'blur' }"
           >
-            <el-input v-model="operationFormData.teamName" />
+            <el-input v-model="operationFormData.name" />
           </el-form-item>
           <el-form-item label="团队介绍" prop="description">
             <el-input v-model="operationFormData.description" type="textarea" />
@@ -65,23 +65,7 @@ const router = useRouter();
 const userStore = useUserStore();
 const { userInfo, isTeacher } = storeToRefs(userStore);
 
-const teamList = ref([
-  {
-    teamName: 'cehsi样式',
-  },
-  {
-    teamName: 'cehsi样式',
-  },
-  {
-    teamName: 'cehsi样式',
-  },
-  {
-    teamName: 'cehsi样式',
-  },
-  {
-    teamName: 'cehsi样式',
-  },
-]);
+const teamList = ref([]);
 
 const showDialog = ref(false);
 const operationFormData = ref({});
@@ -91,13 +75,43 @@ watch(showDialog, (val) => {
   !val && operationFormRef.value.resetFields();
 });
 
-const handleDialog = (type) => {
-  if (type !== 'confirm') showDialog.value = false;
+const getUserTeam = () => {
+  api_getUserJoinedTeam({
+    userId: userInfo.value.userId,
+  }).then(({ data }) => {
+    teamList.value = data;
+  });
 };
 
-const handleToDetail = () => {
-  router.push({ name: 'TeamDetail' });
+const handleDialog = (type) => {
+  if (type !== 'confirm') {
+    showDialog.value = false;
+    return;
+  }
+
+  operationFormRef.value.validate((valid) => {
+    if (!valid) return;
+
+    api_teacherAddTeam({
+      ...operationFormData.value,
+      leaderId: userInfo.value.userId,
+    })
+      .then(() => {
+        ElMessage.success('添加团队成功');
+        getUserTeam();
+        showDialog.value = false;
+      })
+      .catch(() => {
+        ElMessage.error('添加团队失败');
+      });
+  });
 };
+
+const handleToDetail = (id) => {
+  router.push({ name: 'TeamDetail', query: { teamId: id } });
+};
+
+getUserTeam();
 </script>
 
 <style lang="scss" scoped>

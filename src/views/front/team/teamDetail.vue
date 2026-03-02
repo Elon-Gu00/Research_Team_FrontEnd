@@ -1,15 +1,24 @@
+<!--
+ * @Author: Gyl
+ * @Date: 2026-03-01 01:18:12
+ * @LastEditors: Gyl
+ * @LastEditTime: 2026-03-02 12:03:26
+ * @Description:
+-->
 <template>
   <div class="team-detail">
     <CustomHeader>
       <template #headerRight>
         <div class="team-title-oper">
-          <span>{{ '这是一个团队名称' }}</span>
+          <span>{{ teamInfo?.teamName ?? '未知团队' }}</span>
           <div class="oper-box">
-            <el-button type="primary" v-if="isTeacher"
+            <el-button type="primary" v-if="isTeacher" @click="openOperDialog('edit')"
               ><template #icon> <icon-ep-edit /> </template>编辑</el-button
             >
-            <el-button type="primary">申请加入</el-button>
-            <el-button type="danger">退出团队</el-button>
+            <el-button type="primary" @click="handleInOutTeam('apply')" v-if="!isInTeam"
+              >申请加入</el-button
+            >
+            <el-button type="danger" @click="handleInOutTeam('out')" v-else>退出团队</el-button>
           </div>
         </div>
       </template>
@@ -23,8 +32,16 @@
               <el-table-column label="角色" prop="role"></el-table-column>
               <el-table-column label="操作">
                 <template #default="{ row }">
-                  <el-button link type="primary">查看</el-button>
-                  <el-button link type="danger" v-if="isTeacher">移出团队</el-button>
+                  <el-button link type="primary" @click="handleTableRow('seeUser', row)"
+                    >查看</el-button
+                  >
+                  <el-button
+                    link
+                    type="danger"
+                    v-if="isTeacher && row.userId !== userInfo.userId"
+                    @click="handleTableRow('deleteUser', row)"
+                    >移出团队</el-button
+                  >
                 </template>
               </el-table-column>
             </el-table>
@@ -51,11 +68,19 @@
             <el-table :data="listData" border>
               <el-table-column label="标题" prop="title"></el-table-column>
               <el-table-column label="上传者" prop="uploader"></el-table-column>
-              <el-table-column label="上传时间" prop="role"></el-table-column>
+              <el-table-column label="上传时间" prop="createdAt"></el-table-column>
               <el-table-column label="操作">
                 <template #default="{ row }">
-                  <el-button link type="primary">下载</el-button>
-                  <el-button link type="danger" v-if="isTeacher">删除</el-button>
+                  <el-button link type="primary" @click="handleTableRow('download', row)"
+                    >下载</el-button
+                  >
+                  <el-button
+                    link
+                    type="danger"
+                    v-if="isTeacher"
+                    @click="handleTableRow('deletePaper', row)"
+                    >删除</el-button
+                  >
                 </template>
               </el-table-column>
             </el-table>
@@ -66,8 +91,12 @@
               <el-table-column label="申请时间" prop="joinAt"></el-table-column>
               <el-table-column label="操作">
                 <template #default="{ row }">
-                  <el-button link type="primary">通过申请</el-button>
-                  <el-button link type="danger">拒绝</el-button>
+                  <el-button link type="primary" @click="handleTableRow('apply', row)"
+                    >通过申请</el-button
+                  >
+                  <el-button link type="danger" @click="handleTableRow('decline', row)"
+                    >拒绝</el-button
+                  >
                 </template>
               </el-table-column>
             </el-table>
@@ -79,7 +108,9 @@
               <el-table-column label="状态" prop="isRead"></el-table-column>
               <el-table-column label="操作">
                 <template #default="{ row }">
-                  <el-button link type="primary">查看</el-button>
+                  <el-button link type="primary" @click="handleTableRow('checkReport', row)"
+                    >查看</el-button
+                  >
                 </template>
               </el-table-column>
             </el-table>
@@ -88,62 +119,294 @@
       </div>
       <div class="right-container">
         <div class="oper">
-          <el-button class="btn" type="primary" v-if="isTeacher">添加成员</el-button>
-          <el-button class="btn" type="primary">发布公告</el-button>
-          <el-button class="btn" type="primary">上传论文</el-button>
-          <el-button class="btn" type="primary" v-if="!isTeacher">写报告</el-button>
+          <el-button class="btn" type="primary" v-if="isTeacher" @click="openOperDialog('add')"
+            >添加成员</el-button
+          >
+          <el-button class="btn" type="primary" v-if="isTeacher" @click="openOperDialog('notice')"
+            >发布公告</el-button
+          >
+          <el-button class="btn" type="primary" @click="openOperDialog('paper')"
+            >上传论文</el-button
+          >
+          <el-button class="btn" type="primary" v-if="!isTeacher" @click="openOperDialog('report')"
+            >写报告</el-button
+          >
         </div>
         <div class="team-intro">
           <div>团队简介</div>
           <el-scrollbar wrap-class="intro">
-            Lorem ipsum dolor sit, amet consectetur adipisicing elit. Maxime vero expedita similique
-            ullam nemo nihil explicabo numquam id, quae alias beatae praesentium quisquam dolor
-            harum. Sed et illum fuga quo. Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-            Itaque, ullam, consectetur quidem neque repellat obcaecati magni soluta saepe inventore
-            dolorum maiores placeat minima, incidunt consequuntur laborum quia laboriosam? Eum,
-            amet.Lorem ipsum dolor sit, amet consectetur adipisicing elit. Maxime vero expedita
-            similique ullam nemo nihil explicabo numquam id, quae alias beatae praesentium quisquam
-            dolor harum. Sed et illum fuga quo. Lorem ipsum dolor sit, amet consectetur adipisicing
-            elit. Itaque, ullam, consectetur quidem neque repellat obcaecati magni soluta saepe
-            inventore dolorum maiores placeat minima, incidunt consequuntur laborum quia laboriosam?
-            Eum, amet.Lorem ipsum dolor sit, amet consectetur adipisicing elit. Maxime vero expedita
-            similique ullam nemo nihil explicabo numquam id, quae alias beatae praesentium quisquam
-            dolor harum. Sed et illum fuga quo. Lorem ipsum dolor sit, amet consectetur adipisicing
-            elit. Itaque, ullam, consectetur quidem neque repellat obcaecati magni soluta saepe
-            inventore dolorum maiores placeat minima, incidunt consequuntur laborum quia laboriosam?
-            Eum, amet.
+            {{ teamInfo?.intro ?? '暂无团队简介' }}
           </el-scrollbar>
         </div>
       </div>
     </div>
+    <custom-dialog
+      :title="dialogTitle"
+      width="30%"
+      confirm-btn-text="确认"
+      cancel-btn-text="取消"
+      :is-show="showDialog"
+      @dialog-handle="handleDialog"
+    >
+      <template #dialogBody v-if="operType === 'edit'">
+        <el-form
+          ref="operationFormRef"
+          :model="operationFormData"
+          label-suffix=":"
+          label-position="top"
+        >
+          <div v-if="operType === 'edit'">
+            <el-form-item
+              label="团队名称"
+              prop="name"
+              :rules="{ required: true, message: '请输入团队名称', trigger: 'blur' }"
+            >
+              <el-input v-model="operationFormData.name" />
+            </el-form-item>
+            <el-form-item label="团队介绍" prop="description">
+              <el-input v-model="operationFormData.description" type="textarea" />
+            </el-form-item>
+          </div>
+          <div v-if="operType === 'paper'">
+            <el-form-item
+              label="论文标题"
+              prop="title"
+              :rules="{ required: true, message: '请输入论文标题', trigger: 'blur' }"
+            >
+              <el-input v-model="operationFormData.title" placeholder="请输入论文标题" />
+            </el-form-item>
+            <el-form-item label="论文摘要" prop="abstractText">
+              <el-input v-model="operationFormData.abstractText" placeholder="请输入论文摘要" />
+            </el-form-item>
+            <el-form-item label="关键词" prop="keywords">
+              <el-input v-model="operationFormData.keywords" placeholder="请输入关键词" />
+            </el-form-item>
+            <el-form-item label="期刊" prop="journal">
+              <el-input v-model="operationFormData.journal" placeholder="请输入期刊" />
+            </el-form-item>
+            <el-form-item label="发布日期" prop="publishDate">
+              <el-date-picker
+                v-model="operationFormData.publishDate"
+                placeholder="请选择发布日期"
+              ></el-date-picker>
+            </el-form-item>
+            <el-form-item
+              label="文件"
+              prop="paperFile"
+              :rules="{
+                required: true,
+                message: '请上传论文文件',
+                trigger: 'change',
+              }"
+            >
+              <UploadFile
+                v-model:file-list="operationFormData.paperFile"
+                :uploadPath="uploadPath"
+                :upload-headers="uploadHeaders"
+                :sizeLimit="50"
+                :hide-upload-btn="operationFormData.paperFile.length >= 1"
+                acceptList=".pdf,.PDF,.doc,.docx"
+                upload-tip="可以上传pdf，doc，docx格式文件，不超过50MB"
+                @upload-success="handleUploadSuccess"
+              />
+            </el-form-item>
+            <el-form-item
+              label="状态"
+              prop="status"
+              :rules="{ required: true, message: '请选择状态', trigger: 'change' }"
+            >
+              <el-radio-group v-model="operationFormData.status">
+                <el-radio value="DRAFT">草稿</el-radio>
+                <el-radio value="PUBLISHED">发布</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </div>
+          <div v-if="operType === 'add'">
+            <el-form-item
+              label="成员"
+              prop="userId"
+              :rules="{ required: true, message: '请选择成员', trigger: 'change' }"
+            >
+              <el-select v-model="operationFormData.userId">
+                <el-option
+                  v-for="member in memberOpts"
+                  :label="member.name"
+                  :value="member.userId"
+                  :key="member.userId"
+                />
+              </el-select>
+            </el-form-item>
+          </div>
+          <div v-if="operType === 'notice'">
+            <el-form-item
+              label="标题"
+              prop="title"
+              :rules="{ required: true, message: '请输入标题', trigger: 'blur' }"
+            >
+              <el-input v-model="operationFormData.title" />
+            </el-form-item>
+            <el-form-item label="内容" prop="content">
+              <el-input v-model="operationFormData.content" type="textarea" />
+            </el-form-item>
+          </div>
+          <div v-if="operType === 'report'">
+            <el-form-item label="发送给" prop="receiverId">
+              <el-select v-model="operationFormData.receiverId">
+                <el-option
+                  v-for="leader in teamLeaderOpt"
+                  :label="leader.name"
+                  :value="leader.leaderId"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="主题" prop="subject">
+              <el-input v-model="operationFormData.subject" placeholder="请输入主题" />
+            </el-form-item>
+            <el-form-item label="内容" prop="content">
+              <WEditor :editorHeight="350" @create-editor="handleCreateEditor" />
+            </el-form-item>
+          </div>
+        </el-form>
+      </template>
+    </custom-dialog>
   </div>
 </template>
 
 <script setup name="TeamDetail">
+import router from '@/router';
+
 const userStore = useUserStore();
 const { userInfo, isTeacher } = storeToRefs(userStore);
+const route = useRoute();
 
+const teamInfo = ref({});
+const isInTeam = ref(false);
 const activeName = ref('user');
 
 const listData = ref([]);
 
-const getUserData = () => {
-  listData.value = [];
-  for (let i = 0; i < 50; i++) {
-    listData.value.push({
-      memberName: 'cehsi' + i,
-      role: 'cehsi',
-    });
+const showDialog = ref(false);
+const operationFormData = ref({
+  paperFile: [],
+});
+const operationFormRef = ref(null);
+const operType = ref('edit');
+const memberOpts = ref([]);
+const teamLeaderOpt = ref([]);
+const editorInstance = ref(null);
+const { uploadHeaders, uploadPath } = useUploadHeaders('files/upload');
+const dialogTitle = computed(() => {
+  switch (operType.value) {
+    case 'edit':
+      return '修改团队信息';
+    case 'paper':
+      return '发布论文';
+    case 'add':
+      return '添加团队成员';
+    case 'report':
+      return '发送报告';
+    case 'notice':
+      return '发送团队公告';
+  }
+});
+
+watch(showDialog, (val) => {
+  !val && operationFormRef.value?.resetFields();
+});
+
+const getTeamDetail = () => {
+  if (route.query.teamId !== null) {
+    api_getTeamDetailById({ id: route.query.teamId })
+      .then(({ data }) => {
+        teamInfo.value = data;
+      })
+      .catch(() => {
+        ElMessage.error('获取团队详细失败');
+      });
   }
 };
 
-const getNoticeData = () => {
-  for (let i = 0; i < 50; i++) {
-    listData.value.push({
-      title: '公告' + i,
-      createAt: '2026-2-10 15:58:00',
+const getUserData = () => {
+  api_getTeamAllMember({
+    current: 1,
+    size: 999,
+    teamId: route.query.teamId,
+  })
+    .then(({ data }) => {
+      listData.value = data.records;
+      isInTeam.value = data.records.some((item) => item.id === userInfo.value.userId);
+    })
+    .catch(() => {
+      listData.value = [];
     });
-  }
+};
+
+const getNoticeData = () => {
+  api_getTeamnotice({
+    current: 1,
+    size: 999,
+    teamId: route.query.teamId,
+  })
+    .then(({ data }) => {
+      listData.value = data.records;
+    })
+    .catch(() => {
+      listData.value = [];
+    });
+};
+
+const getPaperData = () => {};
+
+const getApplyData = () => {
+  api_getTeamAllMember({
+    current: 1,
+    size: 999,
+    teamId: route.query.teamId,
+  })
+    .then(({ data }) => {
+      listData.value = data.records
+        .filter((item) => item.joinedStatus === 'apply')
+        .map((item) => item);
+    })
+    .catch(() => {
+      listData.value = [];
+    });
+};
+
+const getReportData = () => {
+  api_getReportList({
+    current: 1,
+    size: 999,
+    teamId: route.query.teamId,
+  })
+    .then(({ data }) => {
+      listData.value = data.records;
+    })
+    .catch(() => {
+      listData.value = [];
+    });
+};
+
+const getMemberOpts = () => {
+  api_getAllUserSelect()
+    .then(({ data }) => {
+      memberOpts.value = data;
+    })
+    .catch(() => {
+      memberOpts.value = [];
+    });
+};
+
+const getTeamLeaderOpt = () => {
+  api_getTeamLeader()
+    .then(({ data }) => {
+      teamLeaderOpt.value = data;
+    })
+    .catch(() => {});
+};
+
+const handleCreateEditor = (editor) => {
+  if (editor !== null) editorInstance.value = editor;
 };
 
 const handleTabChange = (tab) => {
@@ -156,15 +419,189 @@ const handleTabChange = (tab) => {
       getNoticeData();
       break;
     case 'paper':
+      getPaperData();
       break;
     case 'apply':
+      getApplyData();
       break;
     case 'report':
+      getReportData();
       break;
   }
 };
 
+const openOperDialog = (type) => {
+  operType.value = type;
+  if (type === 'add') {
+    getMemberOpts();
+  }
+  if (type === 'report') {
+    getTeamLeaderOpt();
+  }
+  showDialog.value = true;
+};
+
+const handleInOutTeam = (type) => {
+  const api = type === 'apply' ? api_applyJoinTeam : api_deleteTeamMember;
+  ElMessageBox.confirm('是否要进行该操作？', 'Warning', {
+    confirmButtonText: '确认',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      api({
+        teamId: route.query.teamId,
+        userId: userInfo.value.userId,
+      })
+        .then(() => {
+          ElMessage.success('操作成功');
+        })
+        .catch(() => {
+          ElMessage.error('删除失败');
+        });
+    })
+    .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '取消操作',
+      });
+    });
+};
+
+const handleTableRow = (type, rowData) => {
+  switch (type) {
+    case 'download':
+      downloadFile(rowData.fileUrl, rowData.fileUrl);
+      break;
+    case 'accept':
+      api_updateMemberJoinStatus({
+        teamId: route.query.teamId,
+        userId: rowData.userId,
+        joinedStatus: 'joined',
+      })
+        .then(() => {
+          ElMessage.success('申请通过');
+        })
+        .catch(() => {
+          ElMessage.error('操作失败');
+        });
+      break;
+    case 'decline':
+      api_updateMemberJoinStatus({
+        teamId: route.query.teamId,
+        userId: rowData.userId,
+        joinedStatus: 'rejected',
+      })
+        .then(() => {
+          ElMessage.success('已拒绝');
+        })
+        .catch(() => {
+          ElMessage.error('操作失败');
+        });
+      break;
+    case 'deletePaper':
+      break;
+    case 'seeUser':
+      router.push({ name: 'Mine', id: rowData.userId });
+      break;
+    case 'deleteUser':
+      api_deleteTeamMember({
+        teamId: route.query.teamId,
+        userId: rowData.userId,
+      })
+        .then(() => {
+          ElMessage.success('删除成功');
+        })
+        .catch(() => {
+          ElMessage.error('删除失败');
+        });
+      break;
+    case 'checkReport':
+      break;
+  }
+};
+
+const OPERATION_CONFIG = {
+  edit: {
+    api: api_teacherUpdateTeam,
+    buildParams: (data, context) => ({
+      ...data,
+      leaderId: context.userId,
+    }),
+    onSuccess: getTeamDetail,
+  },
+  add: {
+    api: api_addMember,
+    buildParams: (data, context) => ({
+      ...data,
+      teamId: context.teamId,
+    }),
+    onSuccess: getUserData,
+  },
+  paper: {
+    api: api_addPaper,
+    buildParams: (data, context) => ({
+      ...data,
+      fileUrl: data.paperFile?.[0]?.uploadUrl,
+      uploaderId: context.userId,
+    }),
+    onSuccess: getPaperData,
+  },
+  report: {
+    api: api_sendReport,
+    buildParams: (data, context) => ({
+      ...data,
+      teamId: context.teamId,
+      content: context.editorInstance?.getHtml?.() || '',
+    }),
+    onSuccess: getReportData,
+  },
+  notice: {
+    api: api_addNotice,
+    buildParams: (data, context) => ({
+      ...data,
+      authorId: context.userId,
+    }),
+    onSuccess: getNoticeData,
+  },
+};
+
+const handleDialog = async (type) => {
+  if (type !== 'confirm') {
+    showDialog.value = false;
+    return;
+  }
+
+  operationFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+    const config = OPERATION_CONFIG[operType.value];
+    if (!config) {
+      console.error(`未知的操作类型: ${operType.value}`);
+      return;
+    }
+
+    const context = {
+      userId: userInfo.value.userId,
+      teamId: route.query.teamId,
+      editorInstance: editorInstance.value,
+    };
+
+    try {
+      const params = config.buildParams(operationFormData.value, context);
+      await config.api(params);
+
+      ElMessage.success('操作成功');
+      config.onSuccess?.();
+      showDialog.value = false;
+    } catch (error) {
+      ElMessage.error('操作失败');
+      console.error(error);
+    }
+  });
+};
+
 getUserData();
+getTeamDetail();
 </script>
 
 <style lang="scss" scoped>

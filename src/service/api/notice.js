@@ -1,3 +1,10 @@
+/**
+ * @Author: Gyl
+ * @Date: 2026-03-01 01:18:12
+ * @LastEditors: Gyl
+ * @LastEditTime: 2026-03-01 11:01:39
+ * @Description:
+ */
 import request from '..';
 
 const URL = {
@@ -6,7 +13,7 @@ const URL = {
   AddNotice: 'notice/add',
   DeleteNotice: 'notice/delete',
   UpdateNotice: 'notice/update',
-  GetNoticeDetail: 'notice/detail',
+  GetNoticeDetail: 'notice/getDetail',
 };
 
 export const api_getTeamnotice = (params) =>

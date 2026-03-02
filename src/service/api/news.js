@@ -1,3 +1,10 @@
+/**
+ * @Author: Gyl
+ * @Date: 2026-03-01 01:18:12
+ * @LastEditors: Gyl
+ * @LastEditTime: 2026-03-01 11:31:26
+ * @Description:
+ */
 import request from '..';
 
 const URL = {

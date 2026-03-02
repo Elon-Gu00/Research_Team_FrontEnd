@@ -9,7 +9,7 @@
     <div class="search-box">
       <el-form ref="searchFormRef" :model="searchForm" inline label-suffix=":">
         <el-form-item label="团队" prop="teamId">
-          <el-select v-model="searchForm.teamName" clearable placeholder="请选择团队">
+          <el-select v-model="searchForm.teamId" clearable placeholder="请选择团队">
             <el-option
               v-for="team in teamOpts"
               :label="team.name"
@@ -19,7 +19,7 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary">查询</el-button>
+          <el-button type="primary" @click="getTableData()">查询</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -31,7 +31,6 @@
         <el-table-column label="操作" min-width="150">
           <template #default="{ row }">
             <el-button link type="primary" @click="handleTableRow('see', row)">查看</el-button>
-            <el-button link type="primary" @click="handleTableRow('edit', row)">编辑</el-button>
             <el-button link type="danger" @click="handleTableRow('delete', row)">删除</el-button>
           </template>
         </el-table-column>
@@ -95,9 +94,39 @@ watch(showDialog, (val) => {
   !val && operFormRef.value?.resetFields();
 });
 
-const getTeamOptions = () => {};
+const getTeamOptions = () => {
+  api_getTeamSelect()
+    .then(({ data }) => {
+      teamOpts.value = data;
+    })
+    .catch(() => {
+      teamOpts.value = [];
+    });
+};
 
-const getTableData = () => {};
+const getTableData = (type) => {
+  if (type === 'reset') {
+    searchFormRef.value.resetFields();
+    paginationOpt.current = 1;
+  }
+
+  if (type === 'query') {
+    paginationOpt.current = 1;
+  }
+
+  api_getReportList({
+    ...paginationOpt,
+    ...searchForm.value,
+  })
+    .then(({ data }) => {
+      tableData.value = data.records;
+      paginationOpt.total = data.total;
+    })
+    .catch(() => {
+      tableData.value = [];
+      paginationOpt.total = 0;
+    });
+};
 
 const changePagination = (type, val) => {
   if (type === 'changeSize') {
@@ -125,10 +154,7 @@ const handleTableRow = (type, rowData) => {
   switch (type) {
     case 'see':
       break;
-    case 'edit':
-      break;
-    case 'add':
-      showDialog.value = true;
+    case 'delete':
       break;
   }
 };

@@ -99,7 +99,6 @@ const personalInfo = ref({
     department: '',
     diploma: '',
     sex: '',
-    
   },
   generalIntro: '',
   exp: '',

@@ -17,7 +17,7 @@
           </el-select>
         </template>
         <template #append>
-          <el-button>
+          <el-button @click="handleSearch">
             <template #icon>
               <icon-ep-search />
             </template>
@@ -105,6 +105,25 @@ watch(showDialog, (val) => {
 
 const handleDialog = (type) => {
   if (type !== 'confirm') showDialog.value = false;
+
+  operFormRef.value.validate((valid) => {
+    if (!valid) return;
+
+    api_addNews({
+      ...omit(operForm.value, ['cover']),
+      content: editorInstance.value.getHtml(),
+      coverUrl: operationFormData.value.cover[0].uploadUrl,
+      authorId: userInfo.userId,
+    })
+      .then(() => {
+        ElMessage.success('操作成功');
+        getTableData('reset');
+        showDialog.value = false;
+      })
+      .catch(() => {
+        ElMessage.error('操作失败');
+      });
+  });
 };
 
 const handleCreateEditor = (editor) => {

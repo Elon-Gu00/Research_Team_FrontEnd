@@ -18,7 +18,7 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary">查询</el-button>
+          <el-button type="primary" @click="getTableData()">查询</el-button>
         </el-form-item>
       </el-form>
       <el-button type="primary" @click="handleTableRow('add')">
@@ -32,8 +32,12 @@
       <el-table ref="tableRef" :data="tableData" border>
         <el-table-column label="公告ID" prop="noticeId"></el-table-column>
         <el-table-column label="作者ID" prop="authorId"></el-table-column>
-        <el-table-column label="标题" prop="userType"></el-table-column>
-        <el-table-column label="公告类型" prop="email"></el-table-column>
+        <el-table-column label="标题" prop="title"></el-table-column>
+        <el-table-column label="公告类型" prop="targetType">
+          <template #default="{ row }">
+            {{ row.targetType === 'ALL' ? '全体' : '团队' }}
+          </template>
+        </el-table-column>
         <el-table-column label="创建时间" prop="createdAt"></el-table-column>
         <el-table-column label="操作" min-width="150">
           <template #default="{ row }">
@@ -65,21 +69,46 @@
       cancel-btn-text="取消"
     >
       <template #dialogBody>
-        <el-form ref="operFormRef" :model="operForm" label-width="90">
-          <el-form-item label="标题" prop="title">
-            <el-input v-model="operForm.username" />
+        <el-form
+          ref="operFormRef"
+          :model="operForm"
+          label-width="90"
+          :disabled="operType === 'see'"
+        >
+          <el-form-item
+            label="标题"
+            prop="title"
+            :rules="{ required: true, message: '请输入标题', trigger: 'blur' }"
+          >
+            <el-input v-model="operForm.title" />
           </el-form-item>
           <el-form-item label="内容" prop="content">
             <el-input v-model="operForm.content" type="textarea" />
           </el-form-item>
-          <el-form-item label="公告类型" prop="targetType">
+          <el-form-item
+            label="公告类型"
+            prop="targetType"
+            :rules="{ required: true, message: '请选择公告类型', trigger: 'change' }"
+          >
             <el-select v-model="operForm.targetType">
               <el-option label="团队" value="TEAM" />
               <el-option label="全体" value="ALL" />
             </el-select>
           </el-form-item>
-          <el-form-item v-if="operForm.targetType === 'TEAM'" label="目标团队" prop="targetId">
-            <el-select v-model="operForm.targetId"></el-select>
+          <el-form-item
+            v-if="operForm.targetType === 'TEAM'"
+            label="目标团队"
+            prop="targetId"
+            :rules="{ required: true, message: '请选择目标团队', trigger: 'change' }"
+          >
+            <el-select v-model="operForm.targetId">
+              <el-option
+                v-for="team in teamOpts"
+                :label="team.name"
+                :value="team.id"
+                :key="team.id"
+              />
+            </el-select>
           </el-form-item>
         </el-form>
       </template>
@@ -88,8 +117,12 @@
 </template>
 
 <script setup name="NoticeManagement">
+const { userInfo } = useUserStore();
+
 const searchFormRef = ref(null);
-const searchForm = ref({});
+const searchForm = ref({
+  title: '',
+});
 
 const tableRef = ref(null);
 const tableData = ref([]);
@@ -104,23 +137,7 @@ const showDialog = ref(false);
 const operType = ref('add');
 const operFormRef = ref(null);
 const operForm = ref({});
-
-watch(showDialog, (val) => {
-  !val && operFormRef.value?.resetFields();
-});
-
-const getTableData = () => {};
-
-const changePagination = (type, val) => {
-  if (type === 'changeSize') {
-    paginationOpt.size = val;
-    getTableData();
-  } else if (type === 'changePage') {
-    paginationOpt.current = val;
-    getTableData();
-  }
-};
-
+const teamOpts = ref([]);
 const dialogTitle = computed(() => {
   switch (operType.value) {
     case 'see':
@@ -132,34 +149,138 @@ const dialogTitle = computed(() => {
   }
 });
 
+watch(showDialog, (val) => {
+  !val && operFormRef.value?.resetFields();
+});
+
+const getTableData = (type) => {
+  if (type === 'reset') {
+    searchFormRef.value.resetFields();
+    paginationOpt.current = 1;
+  }
+
+  if (type === 'query') {
+    paginationOpt.current = 1;
+  }
+
+  api_getNoticeList({
+    ...paginationOpt,
+    ...searchForm.value,
+  })
+    .then(({ data }) => {
+      tableData.value = data.records;
+      paginationOpt.total = data.total;
+    })
+    .catch(() => {
+      tableData.value = [];
+      paginationOpt.total = 0;
+    });
+};
+
+const changePagination = (type, val) => {
+  if (type === 'changeSize') {
+    paginationOpt.size = val;
+    getTableData();
+  } else if (type === 'changePage') {
+    paginationOpt.current = val;
+    getTableData();
+  }
+};
+
+const getTeamOptions = () => {
+  api_getTeamSelect()
+    .then(({ data }) => {
+      teamOpts.value = data;
+    })
+    .catch(() => {
+      teamOpts.value = [];
+    });
+};
+
 const handleTableRow = (type, rowData) => {
   operType.value = type;
   switch (type) {
     case 'see':
+      getDetail(rowData.noticeId);
+      showDialog.value = true;
       break;
     case 'edit':
+      getDetail(rowData.noticeId);
+      showDialog.value = true;
       break;
     case 'add':
       showDialog.value = true;
       break;
+    case 'delete':
+      ElMessageBox.confirm('是否要删除该数据？', 'Warning', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          api_deleteNotice({
+            noticeId: rowData.noticeId,
+          })
+            .then(() => {
+              ElMessage.success('删除成功');
+              getTableData('reset');
+            })
+            .catch(() => {
+              ElMessage.error('删除失败');
+            });
+        })
+        .catch(() => {
+          ElMessage({
+            type: 'info',
+            message: '取消操作',
+          });
+        });
+      break;
   }
 };
 
-const getDetail = () => {};
+const getDetail = (noticeId) => {
+  api_getNoticeDetail({
+    noticeId,
+  })
+    .then(({ data }) => {
+      operForm.value = data;
+    })
+    .catch(() => {});
+};
 
 const handleDialog = (type) => {
   if (type !== 'confirm') {
     showDialog.value = false;
     return;
   }
+
+  if (operType.value === 'see') {
+    showDialog.value = false;
+    return;
+  }
   operFormRef.value.validate((valid) => {
     if (!valid) return;
 
-    //api
+    const api = operType.value === 'add' ? api_addNotice : api_updateNotice;
+
+    api({
+      ...operForm.value,
+      authorId: userInfo.userId,
+    })
+      .then(() => {
+        ElMessage.success('操作成功');
+        getTableData('reset');
+        showDialog.value = false;
+      })
+      .catch(() => {
+        ElMessage.error('操作失败');
+      });
   });
 };
 
 getTableData();
+getTeamOptions();
 </script>
 
 <style lang="scss" scoped>
