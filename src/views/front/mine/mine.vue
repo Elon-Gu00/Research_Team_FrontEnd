@@ -10,7 +10,7 @@
         <div class="mine-title-oper">
           <span>{{ '个人主页' }}</span>
           <div class="oper-box">
-            <el-button type="success" size="large" v-if="!isCheck">
+            <el-button type="success" size="large" v-if="!isCheck" @click="showDialog = true">
               <template #icon><icon-ep-edit /></template>
               编辑
             </el-button>
@@ -21,34 +21,34 @@
     <div class="mine-info">
       <div class="base-info">
         <div class="avatat-box">
-          <img src="@images/user-avatar-2.png" alt="" />
+          <img :src="personalInfo?.avatarUrl ?? '@images/user-avatar-2.png'" alt="" :draggable="false"/>
         </div>
         <div class="info-box">
           <span>基本信息</span>
           <div class="base">
             <div class="base-item"">
               <span class="label">姓名:</span>
-              <span class="desc">{{ '樱岛流京子' }}</span>
+              <span class="desc">{{ personalInfo?.name ?? '暂无'}}</span>
             </div>
             <div class="base-item"">
               <span class="label">学历:</span>
-              <span class="desc">{{ '学历' }}</span>
+              <span class="desc">{{ personalInfo?.degree ?? '暂无' }}</span>
             </div>
             <div class="base-item"">
               <span class="label">性别:</span>
-              <span class="desc">{{ '男' }}</span>
+              <span class="desc">{{ personalInfo?.sex ?? '暂无' }}</span>
             </div>
             <div class="base-item"">
               <span class="label">学位:</span>
-              <span class="desc">{{ '老师名字' }}</span>
+              <span class="desc">{{ personalInfo?.diploma ?? '暂无' }}</span>
             </div>
             <div class="base-item"">
               <span class="label">学院:</span>
-              <span class="desc">{{ '信息学院' }}</span>
+              <span class="desc">{{ personalInfo?.department ?? '暂无' }}</span>
             </div>
             <div class="base-item"">
               <span class="label">职称:</span>
-              <span class="desc">{{ '教授' }}</span>
+              <span class="desc">{{ personalInfo?.title ?? '暂无' }}</span>
             </div>
           </div>
         </div>
@@ -57,28 +57,28 @@
         <span>综合介绍</span>
         <el-divider/>
         <div>
-          {{'Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.'}}
+          {{personalInfo?.generalIntro ?? '暂无'}}
         </div>
       </div>
       <div class="general-intro">
         <span>个人经历</span>
         <el-divider/>
         <div>
-          {{'Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.Lorem ipsum dolor '}}
+          {{personalInfo?.exp ?? '暂无'}}
         </div>
       </div>
       <div class="general-intro">
         <span>获奖信息</span>
         <el-divider/>
         <div>
-          {{' dolor totam ad.Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.'}}
+          {{personalInfo?.rewardInfo ?? '暂无'}}
         </div>
       </div>
       <div class="general-intro">
         <span>科学研究</span>
         <el-divider/>
         <div>
-          {{' dolor totam ad.Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorum beatae, placeat quisquam, dolore fugiat vero a saepe cumque eos rem quasi, velit sint repudiandae reprehenderit praesentium possimus dolor totam ad.'}}
+          {{personalInfo?.research ?? '暂无'}}
         </div>
       </div>
     </div>
@@ -117,15 +117,25 @@
         <el-form-item label="科学研究" prop="research">
           <el-input v-model="operForm.research" placeholder="请输入" type="textarea" :rows="6"/>
         </el-form-item>
+        <el-form-item label="头像" prop="avatar">
+           <upload-file
+              :upload-headers="uploadHeaders"
+              :upload-path="uploadPath"
+              list-type="picture-card"
+              v-model:file-list="operForm.avatar"
+              upload-tip="支持上传JPG，PNG格式的文件"
+              accept-list=".jpg,.png"
+              :size-limit="20"
+              :hide-upload-btn="operationFormData.avatar.length >= 1"
+              @upload-success="handleUploadSuccess"
+            />
+        </el-form-item>
       </el-form>
     </CustomDialog>
   </div>
 </template>
 
 <script setup name="Mine">
-import { api_updateStudentInfo, api_updateTeacherInfo } from '@/service/api/user';
-
-
 const route = useRoute();
 const userStore = useUserStore();
 const { userInfo } = storeToRefs(userStore);
@@ -133,20 +143,16 @@ const { userInfo } = storeToRefs(userStore);
 const isTeacher = computed(() => userInfo.value.userType === 'TEACHER');
 const isCheck = computed(() => !checkNullValue(route.query.id));
 const showDialog = ref(false)
-const operForm = ref({})
+const operForm = ref({
+  avatar:[]
+})
 const operFormRef = ref(null)
 
 const personalInfo = ref({
-  baseInfo: {
-    name: '',
-    department: '',
-    diploma: '',
-    sex: '',
-  },
-  generalIntro: '',
-  exp: '',
-  rewardInfo: '',
-  research:''
+})
+
+watch(showDialog, (val) => {
+  !val && operFormRef.value?.resetFields()
 })
 
 const getUserInfo = () => {
@@ -156,9 +162,19 @@ const getUserInfo = () => {
     id: isCheck.value ? route.query.id : userInfo.value.userId
   }).then(({data}) => {
     personalInfo.value = data
+    operForm.value = data
+    operForm.value.avatar = [{
+      url: data.avatarUrl, name: data.avatarUrl, avatarUrl: data.avatarUrl
+    }]
     console.log(personalInfo.value)
   })
 }
+
+const handleUploadSuccess = ({ result, uploadFile }) => {
+  operForm.value.avatar = [
+    { url: result.previewUrl, name: uploadFile.name, avatarUrl: result.previewUrl },
+  ];
+};
 
 const handleDialog = (type) => {
   if (type !== 'confirm') {
@@ -172,7 +188,8 @@ const handleDialog = (type) => {
     const api = isTeacher.value ? api_updateTeacherInfo : api_updateStudentInfo;
 
     api({
-      ...operForm.value
+      ...operForm.value,
+      avatarUrl: operForm.value.avatar[0]?.avatarUrl,
     }).then(() => {
       ElMessage.success('更新成功')
       getUserInfo()
