@@ -19,17 +19,19 @@
       </template>
     </CustomHeader>
     <div class="paper-list">
-      <div class="paper-item" v-for="paper in paperData">
+      <div class="paper-item" v-for="paper in paperData" v-if="paperData.length > 0">
         <i class="iconfont icon-file"></i>
         <div class="title">
           <span>{{ paper.title }}</span>
-          <span class="upload-time">{{ '上传时间 ' + paper.createAt }}</span>
+          <span class="upload-time">{{ '上传时间 ' + paper.createdAt }}</span>
         </div>
         <div class="oper-btn">
-          <el-button type="success" @click="openDialog('download', paper)">下载</el-button>
+          <el-button type="primary" @click="openDialog('download', paper)">下载</el-button>
           <el-button type="success" @click="openDialog('edit', paper)">修改</el-button>
+          <el-button type="danger" @click="openDialog('delete', paper)">删除</el-button>
         </div>
       </div>
+      <el-empty description="你还没上传过论文>_< , 快去上传吧！" v-else />
     </div>
     <CustomDialog
       :title="operType === 'add' ? '上传论文' : '修改'"
@@ -70,14 +72,14 @@
             label="关联团队"
             prop="teamId"
             :rules="{ required: true, message: '请选择团队', trigger: 'change' }"
-            v-if="operForm?.type === 'TEAM'"
+            v-if="operationForm?.type === 'TEAM'"
           >
             <el-select v-model="operationForm.teamId">
               <el-option
                 v-for="team in teamOpts"
-                :label="team.name"
-                :value="team.id"
-                :key="team.id"
+                :label="team.teamName"
+                :value="team.teamId"
+                :key="team.teamId"
               />
             </el-select>
           </el-form-item>
@@ -115,7 +117,9 @@ const getPaperData = () => {
 };
 
 const getTeamOptions = () => {
-  api_getTeamSelect()
+  api_getUserJoinedTeam({
+    userId: userInfo.value.userId,
+  })
     .then(({ data }) => {
       teamOpts.value = data;
     })
@@ -136,6 +140,31 @@ const openDialog = (type, data) => {
       break;
     case 'add':
       showDialog.value = true;
+      break;
+    case 'delete':
+      ElMessageBox.confirm('是否要删除该论文？', 'Warning', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          api_deletePaper({
+            paperId: data.paperId,
+          })
+            .then(() => {
+              ElMessage.success('删除成功');
+              getTableData('reset');
+            })
+            .catch(() => {
+              ElMessage.error('删除失败');
+            });
+        })
+        .catch(() => {
+          ElMessage({
+            type: 'info',
+            message: '取消操作',
+          });
+        });
       break;
   }
 };
@@ -172,11 +201,11 @@ const handleDialog = (type) => {
     api({
       ...operationForm.value,
       fileUrl: operationForm.value.paperFile[0]?.uploadUrl,
-      uploaderId: userInfo.userId,
+      uploaderId: userInfo.value.userId,
     })
       .then(() => {
         ElMessage.success('操作成功');
-        getTableData();
+        getPaperData();
         showDialog.value = false;
       })
       .catch(() => {
@@ -236,9 +265,9 @@ getTeamOptions();
       }
 
       .oper-btn {
-        width: 100px;
         height: 100%;
         @include flex(flex-end, center);
+        margin-left: 16px;
       }
 
       &:last-child {

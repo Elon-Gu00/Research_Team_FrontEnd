@@ -15,30 +15,51 @@
         </el-carousel>
       </div>
       <div class="top-news">
-        <div class="top-news-item" v-for="i in 6">
-          <img src="https://picsum.photos/id/1/200/300" alt="" />
+        <div class="top-news-item" v-for="top in topSixNewsData">
+          <img :src="top.coverUrl" alt="" />
           <div class="info">
-            <span class="title">{{ '这是新闻标题' + i }}</span>
-            <div class="summary">{{ '这是摘要' + i }}</div>
-            <span class="author">{{ '作者: ' + '马嘉祺' }}</span>
+            <span class="title">{{ top.title }}</span>
+            <div class="summary">{{ top.summary }}</div>
+            <span class="author">{{ '作者: ' + top.uploaderName }}</span>
           </div>
         </div>
       </div>
     </div>
     <div class="remain-news">
-      <div class="news-item" v-for="i in 20">
-        <img src="https://picsum.photos/id/1/200/300" alt="" />
+      <div class="news-item" v-for="remain in remainNewsData">
+        <img :src="remain.coverUrl" alt="" />
         <div class="info">
-          <span class="title">{{ '这是新闻标题' + i }}</span>
-          <div class="summary">{{ '这是摘要' + i }}</div>
-          <span class="author">{{ '作者: ' + '马嘉祺' }}</span>
+          <span class="title">{{ remain.title }}</span>
+          <div class="summary">{{ remain.summary }}</div>
+          <span class="author">{{ '作者: ' + remain.uploaderName }}</span>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup name="Index"></script>
+<script setup name="Index">
+const topSixNewsData = ref([]);
+
+const remainNewsData = ref([]);
+
+const getIndexNews = () => {
+  api_getIndexNews()
+    .then(({ data }) => {
+      const newsList = Array.isArray(data) ? data : [];
+
+      topSixNewsData.value = newsList.slice(0, 6);
+      remainNewsData.value = newsList.slice(6);
+    })
+    .catch((error) => {
+      console.error('获取新闻失败:', error);
+      topSixNewsData.value = [];
+      remainNewsData.value = [];
+    });
+};
+
+getIndexNews();
+</script>
 
 <style lang="scss" scoped>
 .index-page {

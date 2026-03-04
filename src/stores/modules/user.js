@@ -35,6 +35,10 @@ export const useUserStore = defineStore(
       loginData.value = JSON.parse(JSON.stringify(data));
     };
 
+    const setName = (data) => {
+      userInfo.value.name = data;
+    };
+
     const saveUserInfo = (data) => {
       Object.assign(userInfo.value, { ...data });
     };
@@ -46,6 +50,7 @@ export const useUserStore = defineStore(
       getToken,
       isTeacher,
       isAdmin,
+      setName,
       saveLoginData,
       saveUserInfo,
     };

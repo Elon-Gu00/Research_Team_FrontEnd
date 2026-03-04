@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-03-01 01:18:12
  * @LastEditors: Gyl
- * @LastEditTime: 2026-03-02 14:55:40
+ * @LastEditTime: 2026-03-03 21:37:07
  * @Description:
 -->
 <template>
@@ -10,7 +10,7 @@
     <CustomHeader>
       <template #headerRight>
         <div class="team-title-oper">
-          <span>{{ teamInfo?.teamName ?? '未知团队' }}</span>
+          <span>{{ teamInfo?.name ?? '未知团队' }}</span>
           <div class="oper-box">
             <el-button type="primary" v-if="isTeacher" @click="openOperDialog('edit')"
               ><template #icon> <icon-ep-edit /> </template>编辑</el-button
@@ -48,7 +48,7 @@
           </el-tab-pane>
           <el-tab-pane label="公告" name="notice">
             <el-scrollbar height="100%">
-              <div class="notice-item" v-for="notice in listData">
+              <div class="notice-item" v-for="notice in listData" v-if="listData.length > 0">
                 <icon-ep-notification class="icon" />
                 <div class="notice-info">
                   <div class="title">
@@ -58,10 +58,11 @@
                     <div class="oper-icon">
                       <el-tag>{{ '全体' }}</el-tag> <icon-ep-right />
                     </div>
-                    <div>{{ '发布时间 ' + notice.createAt }}</div>
+                    <div>{{ '发布时间 ' + notice.createdAt }}</div>
                   </div>
                 </div>
               </div>
+              <el-empty description="暂无公告" v-else />
             </el-scrollbar>
           </el-tab-pane>
           <el-tab-pane label="论文" name="paper">
@@ -135,7 +136,7 @@
         <div class="team-intro">
           <div>团队简介</div>
           <el-scrollbar wrap-class="intro">
-            {{ teamInfo?.intro ?? '暂无团队简介' }}
+            {{ teamInfo?.description ?? '暂无团队简介' }}
           </el-scrollbar>
         </div>
       </div>
@@ -148,7 +149,7 @@
       :is-show="showDialog"
       @dialog-handle="handleDialog"
     >
-      <template #dialogBody v-if="operType === 'edit'">
+      <template #dialogBody>
         <el-form
           ref="operationFormRef"
           :model="operationFormData"
@@ -164,7 +165,7 @@
               <el-input v-model="operationFormData.name" />
             </el-form-item>
             <el-form-item label="团队介绍" prop="description">
-              <el-input v-model="operationFormData.description" type="textarea" />
+              <el-input v-model="operationFormData.description" type="textarea" :rows="6" />
             </el-form-item>
           </div>
           <div v-if="operType === 'paper'">
@@ -336,7 +337,7 @@ const getUserData = () => {
       listData.value = data.records
         .filter((item) => item.joinedStatus === 'joined')
         .map((item) => item);
-      isInTeam.value = data.records.some((item) => item.id === userInfo.value.userId);
+      isInTeam.value = data.records.some((item) => item.userId == userInfo.value.userId);
     })
     .catch(() => {
       listData.value = [];
@@ -444,11 +445,16 @@ const handleTabChange = (tab) => {
 
 const openOperDialog = (type) => {
   operType.value = type;
-  if (type === 'add') {
-    getMemberOpts();
-  }
-  if (type === 'report') {
-    getTeamLeaderOpt();
+  switch (type) {
+    case 'add':
+      getMemberOpts();
+      break;
+    case 'report':
+      getTeamLeaderOpt();
+      break;
+    case 'edit':
+      Object.assign(operationFormData.value, teamInfo.value);
+      break;
   }
   showDialog.value = true;
 };
@@ -512,20 +518,56 @@ const handleTableRow = (type, rowData) => {
         });
       break;
     case 'deletePaper':
-      break;
-    case 'seeUser':
-      router.push({ name: 'Mine', id: rowData.userId });
-      break;
-    case 'deleteUser':
-      api_deleteTeamMember({
-        teamId: route.query.teamId,
-        userId: rowData.userId,
+      ElMessageBox.confirm('是否要删除该论文？', 'Warning', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
       })
         .then(() => {
-          ElMessage.success('删除成功');
+          api_deletePaper({
+            paperId: data.paperId,
+          })
+            .then(() => {
+              ElMessage.success('删除成功');
+              getTableData('reset');
+            })
+            .catch(() => {
+              ElMessage.error('删除失败');
+            });
         })
         .catch(() => {
-          ElMessage.error('删除失败');
+          ElMessage({
+            type: 'info',
+            message: '取消操作',
+          });
+        });
+      break;
+    case 'seeUser':
+      router.push({ name: 'Mine', query: { id: rowData.userId } });
+      break;
+    case 'deleteUser':
+      ElMessageBox.confirm('是否要删除该论文？', 'Warning', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          api_deleteTeamMember({
+            teamId: route.query.teamId,
+            userId: rowData.userId,
+          })
+            .then(() => {
+              ElMessage.success('删除成功');
+            })
+            .catch(() => {
+              ElMessage.error('删除失败');
+            });
+        })
+        .catch(() => {
+          ElMessage({
+            type: 'info',
+            message: '取消操作',
+          });
         });
       break;
     case 'checkReport':
@@ -554,6 +596,8 @@ const OPERATION_CONFIG = {
     api: api_addPaper,
     buildParams: (data, context) => ({
       ...data,
+      type: 'TEAM',
+      teamId: route.query.teamId,
       fileUrl: data.paperFile?.[0]?.uploadUrl,
       uploaderId: context.userId,
     }),
@@ -731,6 +775,7 @@ getTeamDetail();
       }
 
       > .team-intro {
+        width: 100%;
         flex: 1;
         border-radius: 16px;
         border: 1px #dcdfe6 solid;

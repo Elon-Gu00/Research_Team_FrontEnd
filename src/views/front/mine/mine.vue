@@ -21,7 +21,7 @@
     <div class="mine-info">
       <div class="base-info">
         <div class="avatat-box">
-          <img :src="personalInfo?.avatarUrl ?? '@images/user-avatar-2.png'" alt="" :draggable="false"/>
+          <img :src="personalInfo.avatarUrl || defaultAvatar" alt="" :draggable="false"/>
         </div>
         <div class="info-box">
           <span>基本信息</span>
@@ -36,7 +36,7 @@
             </div>
             <div class="base-item"">
               <span class="label">性别:</span>
-              <span class="desc">{{ personalInfo?.sex ?? '暂无' }}</span>
+              <span class="desc">{{ (personalInfo?.sex == '0' ?  '男':'女') ?? '暂无'  }}</span>
             </div>
             <div class="base-item"">
               <span class="label">学位:</span>
@@ -82,8 +82,9 @@
         </div>
       </div>
     </div>
-    <CustomDialog :is-show="showDialog" title="修改个人信息" width="40%" @dialog-handle="handleDialog">
-      <el-form ref="operFormRef" :model="operForm">
+    <CustomDialog :is-show="showDialog" title="修改个人信息" width="40%" @dialog-handle="handleDialog" confirm-btn-text="确认" cancel-btn-text="取消">
+      <template  #dialogBody>
+        <el-form ref="operFormRef" :model="operForm" label-width="100" label-suffix=":">
         <el-form-item label="姓名" prop="name">
           <el-input v-model="operForm.name" placeholder="请输入"/>
         </el-form-item>
@@ -126,22 +127,28 @@
               upload-tip="支持上传JPG，PNG格式的文件"
               accept-list=".jpg,.png"
               :size-limit="20"
-              :hide-upload-btn="operationFormData.avatar.length >= 1"
+              :hide-upload-btn="operForm.avatar.length >= 1"
               @upload-success="handleUploadSuccess"
             />
         </el-form-item>
       </el-form>
+      </template>
     </CustomDialog>
   </div>
 </template>
 
 <script setup name="Mine">
+const defaultAvatar = new URL('@/assets/images/user-avatar-2.png', import.meta.url).href
+
+const { uploadHeaders, uploadPath } = useUploadHeaders('files/upload');
+
 const route = useRoute();
 const userStore = useUserStore();
+const {setName} = userStore
 const { userInfo } = storeToRefs(userStore);
 
 const isTeacher = computed(() => userInfo.value.userType === 'TEACHER');
-const isCheck = computed(() => !checkNullValue(route.query.id));
+const isCheck = computed(() => !checkNullValue(route.query.id) );
 const showDialog = ref(false)
 const operForm = ref({
   avatar:[]
@@ -159,13 +166,18 @@ const getUserInfo = () => {
   const api = isTeacher.value ? api_getTeacherInfo : api_getStudentInfo;
 
   api({
-    id: isCheck.value ? route.query.id : userInfo.value.userId
+    id: isCheck.value ? route.query.id : String(userInfo.value.userId)
   }).then(({data}) => {
     personalInfo.value = data
     operForm.value = data
-    operForm.value.avatar = [{
-      url: data.avatarUrl, name: data.avatarUrl, avatarUrl: data.avatarUrl
-    }]
+    if (data.avatarUrl || data.avatarUrl !== '') {
+      operForm.value.avatar = [{
+        url: data.avatarUrl, name: data.avatarUrl, avatarUrl: data.avatarUrl
+      }];
+    } else {
+      operForm.value.avatar = [];
+    }
+
     console.log(personalInfo.value)
   })
 }
@@ -189,12 +201,14 @@ const handleDialog = (type) => {
 
     api({
       ...operForm.value,
-      avatarUrl: operForm.value.avatar[0]?.avatarUrl,
+      avatarUrl: operForm.value.avatar[0]?.avatarUrl ?? '',
     }).then(() => {
       ElMessage.success('更新成功')
+      setName(operForm.value.name)
       getUserInfo()
+      showDialog.value = false
     }).catch(() => {
-      ElMessage.success('更新失败')
+      ElMessage.error('更新失败')
     })
   })
 }

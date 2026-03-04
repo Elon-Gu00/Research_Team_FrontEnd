@@ -52,17 +52,39 @@
     >
       <template #dialogBody>
         <el-form ref="operationFormRef" :model="operationFormData" label-position="top">
-          <el-form-item label="新闻标题" prop="title">
+          <el-form-item
+            label="新闻标题"
+            prop="title"
+            :rules="{ required: true, message: '请输入新闻标题', trigger: 'blur' }"
+          >
             <el-input v-model="operationFormData.title" />
           </el-form-item>
-          <el-form-item label="新闻摘要" prop="summary">
+          <el-form-item
+            label="新闻摘要"
+            prop="summary"
+            :rules="{ required: true, message: '请输入新闻摘要', trigger: 'blur' }"
+          >
             <el-input v-model="operationFormData.summary" />
           </el-form-item>
           <el-form-item label="内容" prop="content">
             <WEditor :editorHeight="350" @create-editor="handleCreateEditor" />
             <!-- <el-input v-model="operationFormData.content" type="textarea" /> -->
           </el-form-item>
-          <el-form-item label="封面图" prop="covrUrl">
+          <el-form-item
+            label="封面图"
+            prop="covrUrl"
+            :rules="{
+              required: true,
+              validator: (rules, value, callback) => {
+                if (operationFormData.cover.length <= 0) {
+                  callback('请选择封面');
+                } else {
+                  callback();
+                }
+              },
+              trigger: 'change',
+            }"
+          >
             <upload-file
               :upload-headers="uploadHeaders"
               :upload-path="uploadPath"
@@ -83,7 +105,7 @@
 
 <script setup name="PageHeader">
 import router from '@/router';
-import { debounce } from 'lodash-es';
+import { debounce, omit } from 'lodash-es';
 
 const userStore = useUserStore();
 const { userInfo, loginData, isTeacher, isAdmin } = storeToRefs(userStore);
@@ -106,18 +128,17 @@ watch(showDialog, (val) => {
 const handleDialog = (type) => {
   if (type !== 'confirm') showDialog.value = false;
 
-  operFormRef.value.validate((valid) => {
+  operationFormRef.value.validate((valid) => {
     if (!valid) return;
 
     api_addNews({
-      ...omit(operForm.value, ['cover']),
+      ...omit(operationFormData.value, ['cover']),
       content: editorInstance.value.getHtml(),
       coverUrl: operationFormData.value.cover[0].uploadUrl,
-      authorId: userInfo.userId,
+      authorId: userInfo.value.userId,
     })
       .then(() => {
         ElMessage.success('操作成功');
-        getTableData('reset');
         showDialog.value = false;
       })
       .catch(() => {
@@ -132,7 +153,7 @@ const handleCreateEditor = (editor) => {
 
 const handleUploadSuccess = ({ result, uploadFile }) => {
   operationFormData.value.cover = [
-    { url: result.previewUrl, name: uploadFile.name, coverUrl: result.fileUrl },
+    { url: result.previewUrl, name: uploadFile.name, uploadUrl: result.previewUrl },
   ];
 };
 

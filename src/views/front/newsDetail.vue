@@ -22,10 +22,16 @@
 <script setup name="NewsDetail">
 const route = useRoute();
 
+const newsData = ref({});
+
 const getNewsDetail = () => {
   if (!route.query.id) return;
 
-  // api
+  api_getNewsDetail({
+    newsId: route.query.id,
+  }).then(({ data }) => {
+    newsData.value = data;
+  });
 };
 </script>
 

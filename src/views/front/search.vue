@@ -7,11 +7,15 @@
   <div class="search-container">
     <CustomHeader :header-text="typeMap[route.query?.type] ?? '搜索结果'"></CustomHeader>
     <div class="search-list">
-      <div class="search-item" v-for="data in searchData">
+      <div
+        class="search-item"
+        v-for="data in searchData"
+        @click="handleToSource(data.sourceType, data)"
+      >
         <i :class="['iconfont', iconType]"></i>
         <div class="title">
           <span>{{ data.title }}</span>
-          <span class="upload-time">{{ '上传时间 ' + data.createAt }}</span>
+          <span class="upload-time">{{ '上传时间 ' + data.createTime }}</span>
         </div>
       </div>
     </div>
@@ -19,6 +23,7 @@
 </template>
 
 <script setup name="Search">
+const router = useRouter();
 const route = useRoute();
 const searchData = ref([]);
 
@@ -44,12 +49,28 @@ const typeMap = {
 
 const getSearchData = () => {
   if (!route.query.type) return;
-  console.log('搜索了');
-  for (let i = 0; i < 50; i++) {
-    searchData.value.push({
-      title: 'cehsi' + i,
-      createAt: '2026-2-10 16:58:00',
-    });
+  api_search({
+    type: route.query.type,
+    keyword: route.query.keyword,
+  }).then(({ data }) => {
+    searchData.value = data;
+  });
+};
+
+const handleToSource = (type, data) => {
+  switch (type) {
+    case 'TEAM':
+      router.push({ name: 'TeamDetail', query: { teamId: data.id } });
+      break;
+    case 'TEACHER':
+      router.push({ name: 'Mine', query: { id: data.id } });
+      break;
+    case 'PAPER':
+      downloadFile(data.description, data.description);
+      break;
+    case 'NEWS':
+      router.push({ name: 'NewsDetail', query: { id: data.id } });
+      break;
   }
 };
 

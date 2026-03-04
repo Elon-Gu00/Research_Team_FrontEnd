@@ -19,17 +19,18 @@
       </template>
     </CustomHeader>
     <div class="notice-list">
-      <div class="notice-item" v-for="notice in noticeData">
+      <div class="notice-item" v-for="notice in noticeData" v-if="noticeData.length > 0">
         <i class="iconfont icon-calendar-check"></i>
         <div class="title">
           <span>{{ notice.title }}</span>
-          <span class="upload-time">{{ '发布时间 ' + notice.createAt }}</span>
+          <span class="upload-time">{{ '发布时间 ' + notice.createdAt }}</span>
         </div>
         <div class="oper-btn">
           <el-button type="success" @click="openDialog('edit', notice)">修改</el-button>
           <el-button type="danger" @click="openDialog('delete', notice)">删除</el-button>
         </div>
       </div>
+      <el-empty description="这里没有东西哦 ？！" v-else />
     </div>
     <CustomDialog
       title="发布公告"
@@ -61,9 +62,9 @@
             <el-select v-model="operationForm.targetId">
               <el-option
                 v-for="team in teamOpts"
-                :label="team.name"
-                :value="team.id"
-                :key="team.id"
+                :label="team.teamName"
+                :value="team.teamId"
+                :key="team.teamId"
               />
             </el-select>
           </el-form-item>
@@ -103,7 +104,9 @@ const getNoticeData = () => {
 };
 
 const getTeamOptions = () => {
-  api_getTeamSelect()
+  api_getUserJoinedTeam({
+    userId: userInfo.value.userId,
+  })
     .then(({ data }) => {
       teamOpts.value = data;
     })
@@ -132,11 +135,39 @@ const openDialog = (type, data) => {
       getDetail(data.noticeId);
       showDialog.value = true;
       break;
+    case 'delete':
+      ElMessageBox.confirm('是否要删除该公告？', 'Warning', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          api_deleteNotice({
+            noticeId: data.noticeId,
+          })
+            .then(() => {
+              ElMessage.success('删除成功');
+              getTableData('reset');
+            })
+            .catch(() => {
+              ElMessage.error('删除失败');
+            });
+        })
+        .catch(() => {
+          ElMessage({
+            type: 'info',
+            message: '取消操作',
+          });
+        });
+      break;
   }
 };
 
 const handleDialog = (type) => {
-  if (type !== 'confirm') showDialog.value = false;
+  if (type !== 'confirm') {
+    showDialog.value = false;
+    return;
+  }
 
   operationFormRef.value.validate((valid) => {
     if (!valid) return;
@@ -145,7 +176,7 @@ const handleDialog = (type) => {
 
     api({
       ...operationForm.value,
-      authorId: userInfo.userId,
+      authorId: userInfo.value.userId,
     })
       .then(() => {
         ElMessage.success('操作成功');

@@ -19,6 +19,7 @@ const URL = {
   GetTeacherInfo: 'teacher/getInfoById',
   UpdateStudentInfo: 'student/update',
   UpdateTeacherInfo: 'teacher/update',
+  Search: 'search/getData',
 };
 
 export const api_getUserList = (params) =>
@@ -96,4 +97,11 @@ export const api_updateTeacherInfo = (data) =>
     url: URL.UpdateTeacherInfo,
     method: 'post',
     data,
+  });
+
+export const api_search = (params) =>
+  request({
+    url: URL.Search,
+    method: 'get',
+    params,
   });

@@ -5,9 +5,12 @@
 -->
 <template>
   <div class="send-report-container">
-    <CustomHeader header-text="发送报告"></CustomHeader>
+    <CustomHeader
+      :header-text="isCheck ? '查看报告' : '发送报告'"
+      :show-back-btn="isCheck"
+    ></CustomHeader>
     <div class="send-box">
-      <el-form :model="sendData" label-position="top">
+      <el-form :model="sendData" label-position="top" :disabled="isCheck">
         <el-form-item
           label="团队"
           prop="teamId"
@@ -44,7 +47,7 @@
         </el-form-item>
       </el-form>
       <el-divider />
-      <div class="btn-box">
+      <div class="btn-box" v-if="!isCheck">
         <el-button type="success" size="large" @click="handleSendReport">
           <template #icon><icon-ep-promotion /></template>
           发送报告
@@ -57,6 +60,7 @@
 <script setup name="Send">
 import { debounce } from 'lodash-es';
 
+const route = useRoute();
 const userStore = useUserStore();
 const { userInfo } = storeToRefs(userStore);
 const editorInstance = ref(null);
@@ -66,6 +70,7 @@ const sendData = ref({
 });
 const leaderOpts = ref([]);
 const currentTeam = computed(() => sendData.value.teamId);
+const isCheck = computed(() => !checkNullValue(route.query.id));
 
 watch(currentTeam, () => {
   sendData.value.receiverId = '';
@@ -75,6 +80,19 @@ watch(currentTeam, () => {
     leaderOpts.value = data;
   });
 });
+
+const getReportDetail = () => {
+  if (!isCheck.value) return;
+
+  api_getReportDetail({
+    id: route.query?.id,
+  })
+    .then(({ data }) => {
+      sendData.value = data;
+      editorInstance.value.setHtml(data.content);
+    })
+    .catch(() => {});
+};
 
 const getUserTeam = () => {
   api_getUserJoinedTeam({
@@ -99,6 +117,7 @@ const handleSendReport = debounce(() => {
 }, 500);
 
 getUserTeam();
+getReportDetail();
 </script>
 
 <style lang="scss" scoped>

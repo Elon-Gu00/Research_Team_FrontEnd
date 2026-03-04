@@ -19,7 +19,7 @@
       </template>
     </CustomHeader>
     <div class="report-item-list">
-      <div class="report-item" v-for="report in reportData">
+      <div class="report-item" v-for="report in reportData" v-if="reportData.length > 0">
         <i class="iconfont icon-Report"></i>
         <div class="title">
           <span>{{ report.subject }}</span>
@@ -33,6 +33,7 @@
           >
         </div>
       </div>
+      <el-empty description="这里没有东西哦 ？！" v-else />
     </div>
   </div>
 </template>
