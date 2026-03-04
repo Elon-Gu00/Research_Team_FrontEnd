@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-03-01 01:18:12
  * @LastEditors: Gyl
- * @LastEditTime: 2026-03-03 21:37:07
+ * @LastEditTime: 2026-03-04 09:19:31
  * @Description:
 -->
 <template>
@@ -196,7 +196,13 @@
               prop="paperFile"
               :rules="{
                 required: true,
-                message: '请上传论文文件',
+                validator: (rules, value, callback) => {
+                  if (operationFormData.paperFile.length <= 0) {
+                    callback('请上传文件');
+                  } else {
+                    callback();
+                  }
+                },
                 trigger: 'change',
               }"
             >

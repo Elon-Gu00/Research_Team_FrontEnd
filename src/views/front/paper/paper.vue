@@ -46,7 +46,21 @@
           <el-form-item label="论文标题" prop="title">
             <el-input v-model="operationForm.title" placeholder="请输入论文标题" />
           </el-form-item>
-          <el-form-item label="上传文件" prop="paperFile">
+          <el-form-item
+            label="上传文件"
+            prop="paperFile"
+            :rules="{
+              required: true,
+              validator: (rules, value, callback) => {
+                if (operationForm.paperFile.length <= 0) {
+                  callback('请上传文件');
+                } else {
+                  callback();
+                }
+              },
+              trigger: 'change',
+            }"
+          >
             <UploadFile
               :upload-headers="uploadHeaders"
               :upload-path="uploadPath"

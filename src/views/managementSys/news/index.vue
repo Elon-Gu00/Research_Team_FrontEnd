@@ -89,7 +89,17 @@
           <el-form-item
             label="封面"
             prop="cover"
-            :rules="{ required: true, message: '请上传新闻封面', trigger: 'change' }"
+            :rules="{
+              required: true,
+              validator: (rules, value, callback) => {
+                if (operForm.cover.length <= 0) {
+                  callback('请上传文件');
+                } else {
+                  callback();
+                }
+              },
+              trigger: 'change',
+            }"
           >
             <UploadFile
               list-type="picture-card"

@@ -108,7 +108,13 @@
             prop="paperFile"
             :rules="{
               required: true,
-              message: '请上传论文文件',
+              validator: (rules, value, callback) => {
+                if (operForm.paperFile.length <= 0) {
+                  callback('请上传文件');
+                } else {
+                  callback();
+                }
+              },
               trigger: 'change',
             }"
           >

@@ -15,7 +15,11 @@
         </el-carousel>
       </div>
       <div class="top-news">
-        <div class="top-news-item" v-for="top in topSixNewsData">
+        <div
+          class="top-news-item"
+          v-for="top in topSixNewsData"
+          @click="handleToDetail(top.newsId)"
+        >
           <img :src="top.coverUrl" alt="" />
           <div class="info">
             <span class="title">{{ top.title }}</span>
@@ -26,7 +30,11 @@
       </div>
     </div>
     <div class="remain-news">
-      <div class="news-item" v-for="remain in remainNewsData">
+      <div
+        class="news-item"
+        v-for="remain in remainNewsData"
+        @click="handleToDetail(remain.newsId)"
+      >
         <img :src="remain.coverUrl" alt="" />
         <div class="info">
           <span class="title">{{ remain.title }}</span>
@@ -39,6 +47,7 @@
 </template>
 
 <script setup name="Index">
+const router = useRouter();
 const topSixNewsData = ref([]);
 
 const remainNewsData = ref([]);
@@ -56,6 +65,10 @@ const getIndexNews = () => {
       topSixNewsData.value = [];
       remainNewsData.value = [];
     });
+};
+
+const handleToDetail = (id) => {
+  router.push({ name: 'NewsDetail', query: { id } });
 };
 
 getIndexNews();
