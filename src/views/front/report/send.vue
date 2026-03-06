@@ -29,9 +29,9 @@
           <el-select v-model="sendData.receiverId">
             <el-option
               v-for="leader in leaderOpts"
-              :label="leader.name"
-              :value="leader.teacherId"
-              :key="leader.teacherId"
+              :label="leader.memberName"
+              :value="leader.userId"
+              :key="leader.userId"
             />
           </el-select>
         </el-form-item>
@@ -87,8 +87,14 @@ const getReportDetail = () => {
   api_getReportDetail({
     id: route.query?.id,
   })
-    .then(({ data }) => {
-      sendData.value = data;
+    .then(async ({ data }) => {
+      sendData.value.teamId = data.teamId;
+
+      await nextTick();
+
+      sendData.value.receiverId = data.receiverId;
+      sendData.value.subject = data.subject;
+
       editorInstance.value.setHtml(data.content);
     })
     .catch(() => {});

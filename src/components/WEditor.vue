@@ -1,3 +1,10 @@
+<!--
+ * @Author: Gyl
+ * @Date: 2026-03-01 01:18:12
+ * @LastEditors: Gyl
+ * @LastEditTime: 2026-03-05 21:35:41
+ * @Description:
+-->
 <template>
   <div class="wangeditor-component custom-editor-container">
     <Toolbar
@@ -22,7 +29,6 @@
 <script setup name="WEditor">
 import '@wangeditor/editor/dist/css/style.css';
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue';
-import { AbortRequest } from '@/service/abortRequest';
 
 const props = defineProps({
   modelValue: {
@@ -138,6 +144,8 @@ const toolbarConfig = reactive({
   ...props.toolbarOpts,
 });
 
+const { uploadHeaders, uploadPath } = useUploadHeaders('files/upload');
+
 const editorConfig = reactive({
   ...{
     placeholder: '请输入内容...',
@@ -154,9 +162,9 @@ const editorConfig = reactive({
           return new Promise((resolve, reject) => {
             const formData = new FormData();
             formData.append('file', file);
-            fetch(uploadPath.value + '?policy=public', {
+            fetch(uploadPath + '?policy=public', {
               method: 'POST',
-              headers: { ...uploadHeaders.value },
+              headers: { ...uploadHeaders },
               body: formData,
             })
               .then((response) => response.json())

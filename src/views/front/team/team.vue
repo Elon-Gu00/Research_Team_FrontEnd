@@ -6,7 +6,7 @@
 <template>
   <div class="team-list">
     <custom-header header-text="我的团队" :show-back-btn="false"></custom-header>
-    <div class="joined-list">
+    <div class="joined-list" v-if="teamList.length > 0">
       <div class="team-card" v-for="team in teamList" @click="handleToDetail(team.teamId)">
         <div class="team-name">
           {{ team.teamName }}
@@ -22,6 +22,8 @@
         </div>
       </div>
     </div>
+    <el-empty v-else description="你还没有进入任何团队>_< ！" />
+
     <div class="create-team" v-if="userInfo.userType === 'TEACHER'">
       <div class="create-btn" @click="showDialog = true">
         <div><icon-ep-plus />创建一个新的团队</div>

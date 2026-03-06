@@ -1,3 +1,10 @@
+/**
+ * @Author: Gyl
+ * @Date: 2026-03-01 01:18:12
+ * @LastEditors: Gyl
+ * @LastEditTime: 2026-03-04 20:56:56
+ * @Description:
+ */
 import request from '..';
 
 const URL = {
@@ -6,7 +13,7 @@ const URL = {
   DeleteReport: 'report/delete',
   TeacherReadReport: 'report/read',
   GetReportList: 'report/page',
-  GetUserReport: '',
+  GetUserReport: 'report/userReport',
 };
 
 export const api_sendReport = (data) =>

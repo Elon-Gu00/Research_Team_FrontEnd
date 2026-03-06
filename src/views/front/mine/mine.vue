@@ -172,7 +172,7 @@ const getUserInfo = () => {
     operForm.value = data
     if (data.avatarUrl || data.avatarUrl !== '') {
       operForm.value.avatar = [{
-        url: data.avatarUrl, name: data.avatarUrl, avatarUrl: data.avatarUrl
+        url: data?.avatarUrl || defaultAvatar, name: data.avatarUrl, avatarUrl: data.avatarUrl
       }];
     } else {
       operForm.value.avatar = [];

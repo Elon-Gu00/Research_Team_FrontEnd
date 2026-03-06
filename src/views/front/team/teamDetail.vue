@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-03-01 01:18:12
  * @LastEditors: Gyl
- * @LastEditTime: 2026-03-04 09:19:31
+ * @LastEditTime: 2026-03-05 22:00:33
  * @Description:
 -->
 <template>
@@ -48,7 +48,12 @@
           </el-tab-pane>
           <el-tab-pane label="公告" name="notice">
             <el-scrollbar height="100%">
-              <div class="notice-item" v-for="notice in listData" v-if="listData.length > 0">
+              <div
+                class="notice-item"
+                v-for="notice in listData"
+                v-if="listData.length > 0"
+                @click="handleTableRow('seeNotice', notice)"
+              >
                 <icon-ep-notification class="icon" />
                 <div class="notice-info">
                   <div class="title">
@@ -56,7 +61,8 @@
                   </div>
                   <div class="oper">
                     <div class="oper-icon">
-                      <el-tag>{{ '全体' }}</el-tag> <icon-ep-right />
+                      <el-tag>{{ notice.targetType === 'ALL' ? '全体' : '团队' }}</el-tag>
+                      <icon-ep-right />
                     </div>
                     <div>{{ '发布时间 ' + notice.createdAt }}</div>
                   </div>
@@ -68,7 +74,7 @@
           <el-tab-pane label="论文" name="paper">
             <el-table :data="listData" border>
               <el-table-column label="标题" prop="title"></el-table-column>
-              <el-table-column label="上传者" prop="uploader"></el-table-column>
+              <el-table-column label="上传者" prop="uploaderName"></el-table-column>
               <el-table-column label="上传时间" prop="createdAt"></el-table-column>
               <el-table-column label="操作">
                 <template #default="{ row }">
@@ -88,11 +94,11 @@
           </el-tab-pane>
           <el-tab-pane label="申请处理" name="apply" v-if="isTeacher">
             <el-table :data="listData" border>
-              <el-table-column label="申请人" prop="applyer"></el-table-column>
-              <el-table-column label="申请时间" prop="joinAt"></el-table-column>
+              <el-table-column label="申请人" prop="memberName"></el-table-column>
+              <el-table-column label="申请时间" prop="joinedAt"></el-table-column>
               <el-table-column label="操作">
                 <template #default="{ row }">
-                  <el-button link type="primary" @click="handleTableRow('apply', row)"
+                  <el-button link type="primary" @click="handleTableRow('accept', row)"
                     >通过申请</el-button
                   >
                   <el-button link type="danger" @click="handleTableRow('decline', row)"
@@ -104,9 +110,13 @@
           </el-tab-pane>
           <el-tab-pane label="报告" name="report" v-if="isTeacher">
             <el-table :data="listData" border>
-              <el-table-column label="报告者" prop="sender"></el-table-column>
-              <el-table-column label="发送时间" prop="sendAt"></el-table-column>
-              <el-table-column label="状态" prop="isRead"></el-table-column>
+              <el-table-column label="报告者" prop="senderName"></el-table-column>
+              <el-table-column label="发送时间" prop="sentAt">
+                <template #default="{ row }">
+                  {{ row?.sentAt?.split('T')?.join(' ') }}
+                </template>
+              </el-table-column>
+              <!-- <el-table-column label="状态" prop="isRead"></el-table-column> -->
               <el-table-column label="操作">
                 <template #default="{ row }">
                   <el-button link type="primary" @click="handleTableRow('checkReport', row)"
@@ -261,8 +271,9 @@
               <el-select v-model="operationFormData.receiverId">
                 <el-option
                   v-for="leader in teamLeaderOpt"
-                  :label="leader.name"
-                  :value="leader.leaderId"
+                  :label="leader.memberName"
+                  :value="leader.userId"
+                  :key="leader.userId"
                 />
               </el-select>
             </el-form-item>
@@ -276,6 +287,13 @@
         </el-form>
       </template>
     </custom-dialog>
+    <el-drawer v-model="showDrawer" title="公告内容">
+      <div class="notice-detail">
+        <span class="title">{{ noticeData.title }}</span>
+        <span class="author">{{ '作者 :' + noticeData.name }}</span>
+        <div class="content">{{ noticeData.content }}</div>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
@@ -316,9 +334,15 @@ const dialogTitle = computed(() => {
       return '发送团队公告';
   }
 });
+const showDrawer = ref(false);
+const noticeData = ref({});
 
 watch(showDialog, (val) => {
   !val && operationFormRef.value?.resetFields();
+});
+
+watch(showDrawer, (val) => {
+  !val && Object.assign(noticeData.value, {});
 });
 
 const getTeamDetail = () => {
@@ -417,7 +441,9 @@ const getMemberOpts = () => {
 };
 
 const getTeamLeaderOpt = () => {
-  api_getTeamLeader()
+  api_getTeamLeader({
+    teamId: route.query.teamId,
+  })
     .then(({ data }) => {
       teamLeaderOpt.value = data;
     })
@@ -426,6 +452,12 @@ const getTeamLeaderOpt = () => {
 
 const handleCreateEditor = (editor) => {
   if (editor !== null) editorInstance.value = editor;
+};
+
+const handleUploadSuccess = ({ result, uploadFile }) => {
+  operationFormData.value.paperFile = [
+    { name: result.url, url: result.previewUrl, uploadUrl: result.url },
+  ];
 };
 
 const handleTabChange = (tab) => {
@@ -467,7 +499,7 @@ const openOperDialog = (type) => {
 
 const handleInOutTeam = (type) => {
   const api = type === 'apply' ? api_applyJoinTeam : api_deleteTeamMember;
-  ElMessageBox.confirm('是否要进行该操作？', 'Warning', {
+  ElMessageBox.confirm('是否要进行该操作？', '注意', {
     confirmButtonText: '确认',
     cancelButtonText: '取消',
     type: 'warning',
@@ -479,6 +511,7 @@ const handleInOutTeam = (type) => {
       })
         .then(() => {
           ElMessage.success('操作成功');
+          getTeamDetail();
         })
         .catch(() => {
           ElMessage.error('删除失败');
@@ -505,22 +538,36 @@ const handleTableRow = (type, rowData) => {
       })
         .then(() => {
           ElMessage.success('申请通过');
+          getApplyData();
         })
         .catch(() => {
           ElMessage.error('操作失败');
         });
       break;
     case 'decline':
-      api_updateMemberJoinStatus({
-        teamId: route.query.teamId,
-        userId: rowData.userId,
-        joinedStatus: 'rejected',
+      ElMessageBox.confirm('是否要拒绝该成员加入团队？', 'Warning', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
       })
         .then(() => {
-          ElMessage.success('已拒绝');
+          api_updateMemberJoinStatus({
+            teamId: route.query.teamId,
+            userId: rowData.userId,
+            joinedStatus: 'rejected',
+          })
+            .then(() => {
+              ElMessage.success('已拒绝');
+            })
+            .catch(() => {
+              ElMessage.error('操作失败');
+            });
         })
         .catch(() => {
-          ElMessage.error('操作失败');
+          ElMessage({
+            type: 'info',
+            message: '取消操作',
+          });
         });
       break;
     case 'deletePaper':
@@ -552,7 +599,7 @@ const handleTableRow = (type, rowData) => {
       router.push({ name: 'Mine', query: { id: rowData.userId } });
       break;
     case 'deleteUser':
-      ElMessageBox.confirm('是否要删除该论文？', 'Warning', {
+      ElMessageBox.confirm('是否要删除该成员？', 'Warning', {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning',
@@ -577,6 +624,20 @@ const handleTableRow = (type, rowData) => {
         });
       break;
     case 'checkReport':
+      router.push({
+        name: 'Send',
+        query: { id: rowData.reportId },
+      });
+      break;
+    case 'seeNotice':
+      api_getNoticeDetail({
+        noticeId: rowData.noticeId,
+      })
+        .then(({ data }) => {
+          noticeData.value = data;
+        })
+        .catch(() => {});
+      showDrawer.value = true;
       break;
   }
 };
@@ -622,6 +683,8 @@ const OPERATION_CONFIG = {
     api: api_addNotice,
     buildParams: (data, context) => ({
       ...data,
+      targetType: 'TEAM',
+      teamId: context.teamId,
       authorId: context.userId,
     }),
     onSuccess: getNoticeData,
@@ -781,8 +844,8 @@ getTeamDetail();
       }
 
       > .team-intro {
-        width: 100%;
         flex: 1;
+        width: 100%;
         border-radius: 16px;
         border: 1px #dcdfe6 solid;
         height: 200px;
@@ -799,6 +862,30 @@ getTeamDetail();
           margin-bottom: 8px;
         }
       }
+    }
+  }
+
+  .notice-detail {
+    @include flex(flex-start, flex-start);
+    flex-direction: column;
+    @include wh(100%, 100%);
+    gap: 16px;
+    > .title {
+      @include fontSWC(24px, 600, #333);
+    }
+
+    > .author {
+      @include fontSWC(16px, 500, #666);
+    }
+
+    > .content {
+      width: 100%;
+      padding: 16px;
+      flex: 1;
+      @include fontSWC(18px, 500, #333);
+      background-color: #f2f6fc;
+      border: #dcdfe6 1px solid;
+      border-radius: 10px;
     }
   }
 }

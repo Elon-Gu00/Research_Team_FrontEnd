@@ -42,6 +42,7 @@ getNewsDetail();
     background-color: #f9fbff;
     border-radius: 20px;
     padding: 16px;
+    gap: 16px;
 
     > .news-title {
       @include fontSWC(24px, 600, #333);
