@@ -162,8 +162,15 @@ watch(showDialog, (val) => {
   !val && operFormRef.value?.resetFields()
 })
 
-const getUserInfo = () => {
-  const api = isTeacher.value ? api_getTeacherInfo : api_getStudentInfo;
+const getUserInfo = async () => {
+  let api = null
+  if (isCheck.value) {
+    const {data} = await api_getUserDetail({ userId: route.query.id });
+
+    api = data.userType === 'TEACHER' ? api_getTeacherInfo : api_getStudentInfo;
+  } else {
+    api = isTeacher.value ? api_getTeacherInfo : api_getStudentInfo;
+  }
 
   api({
     id: isCheck.value ? route.query.id : String(userInfo.value.userId)
