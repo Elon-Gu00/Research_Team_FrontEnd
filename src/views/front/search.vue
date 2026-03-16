@@ -47,6 +47,13 @@ const typeMap = {
   NEWS: '新闻搜索结果',
 };
 
+watch(
+  () => [route.query.type, route.query.keyword],
+  () => {
+    getSearchData();
+  },
+);
+
 const getSearchData = () => {
   if (!route.query.type) return;
   api_search({
