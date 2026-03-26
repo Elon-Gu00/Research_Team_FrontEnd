@@ -19,6 +19,22 @@
         </div>
       </div>
     </div>
+    <div class="ai-search-title" v-if="aiSearchData.length > 0 && route.query?.type !== 'AI'">
+      猜你想搜
+    </div>
+    <el-divider v-if="aiSearchData.length > 0 && route.query?.type !== 'AI'" />
+    <div class="search-list">
+      <div
+        class="search-item"
+        v-for="data in aiSearchData"
+        @click="handleToSource(data.sourceType, data)"
+      >
+        <i :class="['iconfont', aiIconType[data.sourceType]]"></i>
+        <div class="title">
+          <span>{{ data.title }}</span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -26,6 +42,7 @@
 const router = useRouter();
 const route = useRoute();
 const searchData = ref([]);
+const aiSearchData = ref([]);
 
 const iconType = computed(() => {
   switch (route.query.type) {
@@ -40,7 +57,15 @@ const iconType = computed(() => {
   }
 });
 
+const aiIconType = {
+  TEAM: 'icon-team',
+  TEACHER: 'icon-idcard',
+  PAPER: 'icon-file',
+  NEWS: 'icon-group',
+};
+
 const typeMap = {
+  AI: 'AI搜索',
   TEAM: '团队搜索结果',
   TEACHER: '教师搜索结果',
   PAPER: '论文搜索结果',
@@ -59,9 +84,16 @@ const getSearchData = () => {
   api_search({
     type: route.query.type,
     keyword: route.query.keyword,
-  }).then(({ data }) => {
-    searchData.value = data;
-  });
+  })
+    .then(({ data }) => {
+      if (route.query.type === 'AI') {
+        aiSearchData.value = data.ai;
+      } else {
+        searchData.value = data.search;
+        aiSearchData.value = data.ai;
+      }
+    })
+    .catch(() => {});
 };
 
 const handleToSource = (type, data) => {
@@ -140,6 +172,9 @@ getSearchData();
         }
       }
     }
+  }
+  .ai-search-title {
+    @include fontSWC(36px, 600, #606266);
   }
 }
 </style>

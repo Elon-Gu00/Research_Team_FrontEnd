@@ -10,6 +10,7 @@
       <el-input v-model="searchInput" placeholder="请输入" @keydown.enter="handleSearch" clearable>
         <template #prepend>
           <el-select v-model="searchType" placeholder="Select">
+            <el-option label="AI搜索" value="AI" />
             <el-option label="团队" value="TEAM" />
             <el-option label="论文" value="PAPER" />
             <el-option label="新闻" value="NEWS" />
@@ -112,7 +113,7 @@ const { userInfo, loginData, isTeacher, isAdmin } = storeToRefs(userStore);
 const { uploadHeaders, uploadPath } = useUploadHeaders('files/upload');
 
 const searchInput = ref('');
-const searchType = ref('TEAM');
+const searchType = ref('AI');
 
 const operationFormRef = ref(null);
 const showDialog = ref(false);
