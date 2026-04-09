@@ -15,7 +15,9 @@
           <el-dropdown placement="top">
             <span> <icon-ep-more-filled /></span>
             <template #dropdown>
-              <el-dropdown-item v-if="isTeacher">删除团队</el-dropdown-item>
+              <el-dropdown-item v-if="isTeacher" @click="deleteTeam(team.teamId)"
+                >删除团队</el-dropdown-item
+              >
               <el-dropdown-item v-else>退出团队</el-dropdown-item>
             </template>
           </el-dropdown>
@@ -107,6 +109,28 @@ const handleDialog = (type) => {
         ElMessage.error('添加团队失败');
       });
   });
+};
+
+const deleteTeam = (id) => {
+  ElMessageBox.confirm('是否删除改团队？', '删除', {
+    confirmButtonText: '确认',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      api_deleteTeam({ teamId: id })
+        .then(() => {
+          ElMessage.success('删除成功');
+          getUserTeam();
+        })
+        .catch(() => {});
+    })
+    .catch(() => {
+      ElMessage({
+        type: 'info',
+        message: '操作取消',
+      });
+    });
 };
 
 const handleToDetail = (id) => {

@@ -32,6 +32,7 @@
         <i :class="['iconfont', aiIconType[data.sourceType]]"></i>
         <div class="title">
           <span>{{ data.title }}</span>
+          <el-tag v-if="infoType[data.sourceType]">{{ infoType[data.sourceType] }}</el-tag>
         </div>
       </div>
     </div>
@@ -62,6 +63,15 @@ const aiIconType = {
   TEACHER: 'icon-idcard',
   PAPER: 'icon-file',
   NEWS: 'icon-group',
+};
+
+const infoType = {
+  TEAM: '团队',
+  TEACHER: '教师',
+  PAPER: '论文',
+  NEWS: '新闻',
+  STUDENT: '学生',
+  NOTICE: '公告',
 };
 
 const typeMap = {
