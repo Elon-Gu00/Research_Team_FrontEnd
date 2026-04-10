@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-03-01 01:18:12
  * @LastEditors: Gyl
- * @LastEditTime: 2026-04-10 11:26:03
+ * @LastEditTime: 2026-04-10 16:32:54
  * @Description:
 -->
 <template>
@@ -597,18 +597,18 @@ const handleTableRow = (type, rowData) => {
         });
       break;
     case 'deletePaper':
-      ElMessageBox.confirm('是否要删除该论文？', 'Warning', {
+      ElMessageBox.confirm('是否删除该论文？', '删除', {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
         type: 'warning',
       })
         .then(() => {
           api_deletePaper({
-            paperId: data.paperId,
+            paperId: rowData.paperId,
           })
             .then(() => {
               ElMessage.success('删除成功');
-              getTableData('reset');
+              getPaperData();
             })
             .catch(() => {
               ElMessage.error('删除失败');
@@ -637,6 +637,7 @@ const handleTableRow = (type, rowData) => {
           })
             .then(() => {
               ElMessage.success('删除成功');
+              getUserData();
             })
             .catch(() => {
               ElMessage.error('删除失败');

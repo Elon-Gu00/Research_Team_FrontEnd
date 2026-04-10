@@ -112,7 +112,7 @@ const handleDialog = (type) => {
 };
 
 const deleteTeam = (id) => {
-  ElMessageBox.confirm('是否删除改团队？', '删除', {
+  ElMessageBox.confirm('是否删除该团队？', '删除', {
     confirmButtonText: '确认',
     cancelButtonText: '取消',
     type: 'warning',
