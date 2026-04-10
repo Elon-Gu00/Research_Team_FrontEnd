@@ -23,7 +23,7 @@
         <i class="iconfont icon-Report"></i>
         <div class="title">
           <span>{{ report.subject }}</span>
-          <span class="upload-time">{{ '发送时间 ' + report.sendAt }}</span>
+          <span class="upload-time">{{ '发送时间 ' + report.sentAt.split('T').join(' ') }}</span>
         </div>
         <div class="oper-btn">
           <el-button

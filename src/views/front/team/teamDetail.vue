@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-03-01 01:18:12
  * @LastEditors: Gyl
- * @LastEditTime: 2026-03-05 22:00:33
+ * @LastEditTime: 2026-04-10 11:26:03
  * @Description:
 -->
 <template>
@@ -12,7 +12,11 @@
         <div class="team-title-oper">
           <span>{{ teamInfo?.name ?? '未知团队' }}</span>
           <div class="oper-box">
-            <el-button type="primary" v-if="isTeacher" @click="openOperDialog('edit')"
+            <el-button
+              type="primary"
+              v-if="isTeacher"
+              :disabled="!isInTeam"
+              @click="openOperDialog('edit')"
               ><template #icon> <icon-ep-edit /> </template>编辑</el-button
             >
             <el-button type="primary" @click="handleInOutTeam('apply')" v-if="!isInTeam"
@@ -38,7 +42,7 @@
                   <el-button
                     link
                     type="danger"
-                    v-if="isTeacher && row.userId !== userInfo.userId"
+                    v-if="isTeacher && row.userId !== userInfo.userId && isInTeam"
                     @click="handleTableRow('deleteUser', row)"
                     >移出团队</el-button
                   >
@@ -46,7 +50,7 @@
               </el-table-column>
             </el-table>
           </el-tab-pane>
-          <el-tab-pane label="公告" name="notice">
+          <el-tab-pane label="公告" name="notice" :disabled="!isInTeam">
             <el-scrollbar height="100%">
               <div
                 class="notice-item"
@@ -71,7 +75,7 @@
               <el-empty description="暂无公告" v-else />
             </el-scrollbar>
           </el-tab-pane>
-          <el-tab-pane label="论文" name="paper">
+          <el-tab-pane label="论文" name="paper" :disabled="!isInTeam">
             <el-table :data="listData" border>
               <el-table-column label="标题" prop="title"></el-table-column>
               <el-table-column label="上传者" prop="uploaderName"></el-table-column>
@@ -92,7 +96,7 @@
               </el-table-column>
             </el-table>
           </el-tab-pane>
-          <el-tab-pane label="申请处理" name="apply" v-if="isTeacher">
+          <el-tab-pane label="申请处理" name="apply" v-if="isTeacher" :disabled="!isInTeam">
             <el-table :data="listData" border>
               <el-table-column label="申请人" prop="memberName"></el-table-column>
               <el-table-column label="申请时间" prop="joinedAt"></el-table-column>
@@ -108,7 +112,7 @@
               </el-table-column>
             </el-table>
           </el-tab-pane>
-          <el-tab-pane label="报告" name="report" v-if="isTeacher">
+          <el-tab-pane label="报告" name="report" v-if="isTeacher" :disabled="!isInTeam">
             <el-table :data="listData" border>
               <el-table-column label="报告者" prop="senderName"></el-table-column>
               <el-table-column label="发送时间" prop="sentAt">
@@ -130,16 +134,35 @@
       </div>
       <div class="right-container">
         <div class="oper">
-          <el-button class="btn" type="primary" v-if="isTeacher" @click="openOperDialog('add')"
+          <el-button
+            class="btn"
+            type="primary"
+            v-if="isTeacher"
+            :disabled="!isInTeam"
+            @click="openOperDialog('add')"
             >添加成员</el-button
           >
-          <el-button class="btn" type="primary" v-if="isTeacher" @click="openOperDialog('notice')"
+          <el-button
+            class="btn"
+            type="primary"
+            v-if="isTeacher"
+            :disabled="!isInTeam"
+            @click="openOperDialog('notice')"
             >发布公告</el-button
           >
-          <el-button class="btn" type="primary" @click="openOperDialog('paper')"
+          <el-button
+            class="btn"
+            type="primary"
+            :disabled="!isInTeam"
+            @click="openOperDialog('paper')"
             >上传论文</el-button
           >
-          <el-button class="btn" type="primary" v-if="!isTeacher" @click="openOperDialog('report')"
+          <el-button
+            class="btn"
+            type="primary"
+            v-if="!isTeacher"
+            :disabled="!isInTeam"
+            @click="openOperDialog('report')"
             >写报告</el-button
           >
         </div>
@@ -512,6 +535,9 @@ const handleInOutTeam = (type) => {
         .then(() => {
           ElMessage.success('操作成功');
           getTeamDetail();
+          if (type === 'out') {
+            getUserData();
+          }
         })
         .catch(() => {
           ElMessage.error('删除失败');
@@ -675,6 +701,7 @@ const OPERATION_CONFIG = {
     buildParams: (data, context) => ({
       ...data,
       teamId: context.teamId,
+      senderId: context.userId,
       content: context.editorInstance?.getHtml?.() || '',
     }),
     onSuccess: getReportData,
