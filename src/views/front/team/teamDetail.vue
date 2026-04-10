@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-03-01 01:18:12
  * @LastEditors: Gyl
- * @LastEditTime: 2026-04-10 16:32:54
+ * @LastEditTime: 2026-04-10 17:54:05
  * @Description:
 -->
 <template>
@@ -38,6 +38,13 @@
                 <template #default="{ row }">
                   <el-button link type="primary" @click="handleTableRow('seeUser', row)"
                     >查看</el-button
+                  >
+                  <el-button
+                    link
+                    type="primary"
+                    v-if="isLeader && row.userId !== userInfo.userId && row.role === '教师'"
+                    @click="handleTableRow('updateRole', row)"
+                    >升为CO-PI</el-button
                   >
                   <el-button
                     link
@@ -329,6 +336,9 @@ const route = useRoute();
 
 const teamInfo = ref({});
 const isInTeam = ref(false);
+const isLeader = computed(() => {
+  return listData.value.find((item) => item.userId == userInfo.value.userId)?.role === '首席研究员';
+});
 const activeName = ref('user');
 
 const listData = ref([]);
@@ -553,6 +563,32 @@ const handleInOutTeam = (type) => {
 
 const handleTableRow = (type, rowData) => {
   switch (type) {
+    case 'updateRole':
+      ElMessageBox.confirm('是否要变更角色？', '变更角色', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          api_updateTeamMemberRole({
+            teamId: rowData.teamId,
+            userId: rowData.userId,
+            role: 'CO-PI',
+          })
+            .then(() => {
+              ElMessage.success('操作成功');
+              getUserData();
+            })
+            .catch(() => {});
+        })
+        .catch(() => {
+          ElMessage({
+            type: 'info',
+            message: '取消操作',
+          });
+        });
+
+      break;
     case 'download':
       downloadFile(rowData.fileUrl, rowData.fileUrl);
       break;
