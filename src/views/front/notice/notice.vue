@@ -147,7 +147,7 @@ const openDialog = (type, data) => {
           })
             .then(() => {
               ElMessage.success('删除成功');
-              getTableData('reset');
+              getNoticeData('reset');
             })
             .catch(() => {
               ElMessage.error('删除失败');

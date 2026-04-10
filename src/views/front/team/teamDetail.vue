@@ -2,7 +2,7 @@
  * @Author: Gyl
  * @Date: 2026-03-01 01:18:12
  * @LastEditors: Gyl
- * @LastEditTime: 2026-04-10 17:54:05
+ * @LastEditTime: 2026-04-10 20:35:54
  * @Description:
 -->
 <template>
@@ -49,7 +49,7 @@
                   <el-button
                     link
                     type="danger"
-                    v-if="isTeacher && row.userId !== userInfo.userId && isInTeam"
+                    v-if="isLeader && row.userId !== userInfo.userId && isInTeam"
                     @click="handleTableRow('deleteUser', row)"
                     >移出团队</el-button
                   >
@@ -748,7 +748,7 @@ const OPERATION_CONFIG = {
     buildParams: (data, context) => ({
       ...data,
       targetType: 'TEAM',
-      teamId: context.teamId,
+      targetId: context.teamId,
       authorId: context.userId,
     }),
     onSuccess: getNoticeData,
