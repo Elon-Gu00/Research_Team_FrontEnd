@@ -390,7 +390,7 @@ const getUserData = () => {
       listData.value = data.records
         .filter((item) => item.joinedStatus === 'joined')
         .map((item) => item);
-      isInTeam.value = data.records.some((item) => item.userId == userInfo.value.userId);
+      isInTeam.value = listData.value.some((item) => item.userId == userInfo.value.userId);
     })
     .catch(() => {
       listData.value = [];

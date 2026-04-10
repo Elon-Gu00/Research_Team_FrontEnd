@@ -83,7 +83,7 @@ const getUserTeam = () => {
   api_getUserJoinedTeam({
     userId: userInfo.value.userId,
   }).then(({ data }) => {
-    teamList.value = data;
+    teamList.value = data.filter((item) => item.joinedStatus === 'joined');
   });
 };
 
